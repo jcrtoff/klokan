@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+# Non-root user for security
+RUN addgroup -S app && adduser -S app -G app
+
+WORKDIR /app
+
+# Dependencies first (layer cache)
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# App source
+COPY server.js ./
+COPY public/ ./public/
+
+# Ownership
+RUN chown -R app:app /app
+USER app
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+CMD ["node", "server.js"]

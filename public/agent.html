@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent — RodCast</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="agent-container">
+    <!-- Left pane: conversation -->
+    <div class="agent-left">
+      <div class="agent-header">
+        <h1>RodCast</h1>
+        <span class="connection-status" id="connStatus">En attente d'un client</span>
+      </div>
+
+      <div class="agent-messages" id="messages"></div>
+
+      <div class="agent-bottom">
+        <div class="agent-status" id="agentStatus">IA en conversation</div>
+        <button class="intervenir-btn" id="intervenirBtn">Intervenir</button>
+        <div class="agent-compose" id="composeBar">
+          <input type="text" id="agentInput" placeholder="Écrire au client…" autocomplete="off">
+          <button id="agentSendBtn">Envoyer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right pane: lead profile -->
+    <div class="agent-right">
+      <div class="lead-card">
+        <div class="lead-avatar" id="avatar">—</div>
+        <div class="lead-name" id="leadName">Client inconnu</div>
+        <div class="lead-contact" id="leadContact">—</div>
+      </div>
+
+      <div class="score-badge froid" id="scoreBadge">FROID</div>
+
+      <div class="qual-section-title">Qualification</div>
+      <div class="qual-grid">
+        <div class="qual-item">
+          <div class="label">Projet</div>
+          <div class="value" id="qProjectType">—</div>
+        </div>
+        <div class="qual-item">
+          <div class="label">Budget</div>
+          <div class="value" id="qBudget">—</div>
+        </div>
+        <div class="qual-item">
+          <div class="label">Secteur</div>
+          <div class="value" id="qNeighbourhood">—</div>
+        </div>
+        <div class="qual-item">
+          <div class="label">Type</div>
+          <div class="value" id="qPropertyType">—</div>
+        </div>
+        <div class="qual-item">
+          <div class="label">Délai</div>
+          <div class="value" id="qTimeline">—</div>
+        </div>
+        <div class="qual-item">
+          <div class="label">Pré-approbation</div>
+          <div class="value" id="qPreApproval">—</div>
+        </div>
+      </div>
+
+      <div class="notes-section">
+        <div class="label">Notes IA</div>
+        <div class="value" id="notesValue">Aucune note pour le moment.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const messages = document.getElementById('messages');
+    const intervenirBtn = document.getElementById('intervenirBtn');
+    const composeBar = document.getElementById('composeBar');
+    const agentInput = document.getElementById('agentInput');
+    const agentSendBtn = document.getElementById('agentSendBtn');
+    const agentStatus = document.getElementById('agentStatus');
+    const connStatus = document.getElementById('connStatus');
+
+    let ws;
+    let intervening = false;
+    let streamBubble = null;
+    let typingTimeout = null;
+
+    function connect() {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}`);
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'identify', role: 'agent' }));
+        connStatus.textContent = 'Connecté';
+      };
+
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+
+        switch (msg.type) {
+          case 'message':
+            addBubble(msg.role, msg.content, msg.agentName);
+            break;
+
+          case 'stream_token':
+            if (!streamBubble) {
+              streamBubble = createBubble('ai');
+              messages.appendChild(streamBubble);
+            }
+            streamBubble.textContent += msg.content;
+            scrollToBottom();
+            break;
+
+          case 'stream_done':
+            streamBubble = null;
+            break;
+
+          case 'lead_update':
+            updateProfile(msg.profile);
+            break;
+
+          case 'client_count':
+            connStatus.textContent = msg.count > 0
+              ? `${msg.count} client${msg.count > 1 ? 's' : ''} connecté${msg.count > 1 ? 's' : ''}`
+              : "En attente d'un client";
+            break;
+        }
+      };
+
+      ws.onclose = () => {
+        connStatus.textContent = 'Déconnecté';
+        setTimeout(connect, 2000);
+      };
+    }
+
+    function createBubble(role) {
+      const div = document.createElement('div');
+      div.className = `bubble ${role}`;
+      return div;
+    }
+
+    function addBubble(role, content, agentName) {
+      const div = createBubble(role);
+      if (role === 'agent' && agentName) {
+        const label = document.createElement('div');
+        label.className = 'agent-label';
+        label.textContent = agentName;
+        div.appendChild(label);
+      }
+      const text = document.createTextNode(content);
+      div.appendChild(text);
+      messages.appendChild(div);
+      scrollToBottom();
+    }
+
+    function scrollToBottom() {
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function updateProfile(p) {
+      const fields = {
+        qProjectType: p.projectType,
+        qBudget: p.budget,
+        qNeighbourhood: p.neighbourhood,
+        qPropertyType: p.propertyType,
+        qTimeline: p.timeline,
+        qPreApproval: p.preApproval
+      };
+
+      for (const [id, val] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (val && val !== 'null') {
+          el.textContent = val;
+          el.classList.add('populated');
+        }
+      }
+
+      // Score badge
+      const badge = document.getElementById('scoreBadge');
+      if (p.leadScore && p.leadScore !== 'null') {
+        const score = p.leadScore.toLowerCase();
+        badge.textContent = score.toUpperCase();
+        badge.className = 'score-badge';
+        if (score === 'froid') badge.classList.add('froid');
+        else if (score === 'tiède' || score === 'tiede') badge.classList.add('tiede');
+        else if (score === 'chaud') badge.classList.add('chaud');
+      }
+
+      // Notes
+      if (p.notes && p.notes !== 'null') {
+        document.getElementById('notesValue').textContent = p.notes;
+      }
+    }
+
+    // Intervenir toggle
+    intervenirBtn.addEventListener('click', () => {
+      intervening = !intervening;
+      composeBar.classList.toggle('visible', intervening);
+      intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
+      intervenirBtn.classList.toggle('active', intervening);
+      agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+      if (intervening) agentInput.focus();
+    });
+
+    function sendAgentMessage() {
+      const text = agentInput.value.trim();
+      if (!text || ws.readyState !== WebSocket.OPEN) return;
+
+      ws.send(JSON.stringify({ type: 'agent_message', content: text }));
+      agentInput.value = '';
+    }
+
+    agentSendBtn.addEventListener('click', sendAgentMessage);
+    agentInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendAgentMessage();
+    });
+
+    // Send agent_typing events
+    agentInput.addEventListener('input', () => {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: true }));
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false }));
+      }, 1500);
+    });
+
+    connect();
+  </script>
+</body>
+</html>

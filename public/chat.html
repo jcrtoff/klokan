@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Roxanne — RodCast</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <span class="online-dot"></span>
+      <div>
+        <h1>Roxanne</h1>
+        <div class="subtitle">Assistante de Rod · RodCast</div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="typing-indicator" id="typingIndicator">
+      <span></span><span></span><span></span>
+    </div>
+
+    <div class="agent-typing-indicator" id="agentTyping">Rod est en train d'écrire…</div>
+
+    <div class="input-bar">
+      <input type="text" id="msgInput" placeholder="Écrire un message…" autocomplete="off">
+      <button id="sendBtn">Envoyer</button>
+    </div>
+  </div>
+
+  <script>
+    const messages = document.getElementById('messages');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const agentTyping = document.getElementById('agentTyping');
+
+    let ws;
+    let streamBubble = null;
+
+    function connect() {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}`);
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'identify', role: 'chat' }));
+      };
+
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+
+        switch (msg.type) {
+          case 'message':
+            addBubble(msg.role, msg.content, msg.agentName);
+            break;
+
+          case 'stream_token':
+            if (!streamBubble) {
+              typingIndicator.classList.remove('visible');
+              streamBubble = createBubble('ai');
+              messages.appendChild(streamBubble);
+            }
+            streamBubble.textContent += msg.content;
+            scrollToBottom();
+            break;
+
+          case 'stream_done':
+            streamBubble = null;
+            break;
+
+          case 'agent_typing':
+            agentTyping.classList.toggle('visible', msg.isTyping);
+            scrollToBottom();
+            break;
+        }
+      };
+
+      ws.onclose = () => {
+        setTimeout(connect, 2000);
+      };
+    }
+
+    function createBubble(role) {
+      const div = document.createElement('div');
+      div.className = `bubble ${role}`;
+      return div;
+    }
+
+    function addBubble(role, content, agentName) {
+      const div = createBubble(role);
+      if (role === 'agent' && agentName) {
+        const label = document.createElement('div');
+        label.className = 'agent-label';
+        label.textContent = agentName;
+        div.appendChild(label);
+      }
+      const text = document.createTextNode(content);
+      div.appendChild(text);
+      messages.appendChild(div);
+      scrollToBottom();
+    }
+
+    function scrollToBottom() {
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function send() {
+      const text = msgInput.value.trim();
+      if (!text || ws.readyState !== WebSocket.OPEN) return;
+
+      ws.send(JSON.stringify({ type: 'user_message', content: text }));
+      addBubble('user', text);
+      msgInput.value = '';
+      typingIndicator.classList.add('visible');
+      scrollToBottom();
+    }
+
+    sendBtn.addEventListener('click', send);
+    msgInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send();
+    });
+
+    connect();
+  </script>
+</body>
+</html>

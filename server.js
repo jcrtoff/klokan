@@ -56,7 +56,8 @@ Garde tes réponses courtes — 2-3 phrases max. Tu es dans un chat mobile.`;
 // ── In-memory state ─────────────────────────────────────────────────────────
 const state = {
   conversation: [],
-  leadProfile: {}
+  leadProfile: {},
+  agentControlled: false
 };
 
 // ── WebSocket server ────────────────────────────────────────────────────────
@@ -92,6 +93,8 @@ wss.on('connection', (ws) => {
           if (Object.keys(state.leadProfile).length > 0) {
             ws.send(JSON.stringify({ type: 'lead_update', profile: state.leadProfile }));
           }
+          // Send current agent control state
+          ws.send(JSON.stringify({ type: 'agent_control', active: state.agentControlled }));
           // Send conversation history
           for (const entry of state.conversation) {
             ws.send(JSON.stringify({
@@ -111,6 +114,11 @@ wss.on('connection', (ws) => {
 
       case 'agent_message':
         handleAgentMessage(msg.content);
+        break;
+
+      case 'agent_control':
+        state.agentControlled = !!msg.active;
+        broadcast(chatClients, { type: 'agent_control', active: state.agentControlled });
         break;
 
       case 'agent_typing':
@@ -135,6 +143,9 @@ async function handleUserMessage(content) {
   broadcast(agentClients, {
     type: 'message', role: 'user', content, timestamp: userEntry.timestamp
   });
+
+  // If agent has taken control, skip Claude response
+  if (state.agentControlled) return;
 
   // Build messages for Claude API
   const apiMessages = state.conversation.map(entry => ({

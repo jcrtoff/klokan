@@ -120,6 +120,14 @@
             updateProfile(msg.profile);
             break;
 
+          case 'agent_control':
+            intervening = msg.active;
+            composeBar.classList.toggle('visible', intervening);
+            intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
+            intervenirBtn.classList.toggle('active', intervening);
+            agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+            break;
+
           case 'client_count':
             connStatus.textContent = msg.count > 0
               ? `${msg.count} client${msg.count > 1 ? 's' : ''} connecté${msg.count > 1 ? 's' : ''}`
@@ -201,6 +209,9 @@
       intervenirBtn.classList.toggle('active', intervening);
       agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
       if (intervening) agentInput.focus();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'agent_control', active: intervening }));
+      }
     });
 
     function sendAgentMessage() {

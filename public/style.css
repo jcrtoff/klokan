@@ -448,3 +448,13 @@ body {
   color: var(--text-primary);
   line-height: 1.4;
 }
+
+/* ── Version tag ──────────────────────────────────────────────── */
+.version-tag {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 4px 0;
+  opacity: 0.5;
+  font-family: monospace;
+}

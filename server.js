@@ -19,6 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/chat', (_req, res) => res.sendFile(path.join(__dirname, 'public/chat.html')));
 app.get('/agent', (_req, res) => res.sendFile(path.join(__dirname, 'public/agent.html')));
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/api/version', (_req, res) => res.json({ sha: process.env.COMMIT_SHA || 'dev' }));
 
 // ── Anthropic client ────────────────────────────────────────────────────────
 const anthropic = new Anthropic();

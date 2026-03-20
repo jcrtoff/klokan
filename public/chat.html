@@ -27,6 +27,7 @@
       <input type="text" id="msgInput" placeholder="Écrire un message…" autocomplete="off">
       <button id="sendBtn">Envoyer</button>
     </div>
+    <div class="version-tag" id="versionTag"></div>
   </div>
 
   <script>
@@ -122,6 +123,10 @@
     });
 
     connect();
+
+    fetch('/api/version').then(r => r.json()).then(d => {
+      document.getElementById('versionTag').textContent = d.sha;
+    }).catch(() => {});
   </script>
 </body>
 </html>

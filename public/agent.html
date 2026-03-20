@@ -69,6 +69,7 @@
         <div class="label">Notes IA</div>
         <div class="value" id="notesValue">Aucune note pour le moment.</div>
       </div>
+      <div class="version-tag" id="versionTag"></div>
     </div>
   </div>
 
@@ -255,6 +256,10 @@
     });
 
     connect();
+
+    fetch('/api/version').then(r => r.json()).then(d => {
+      document.getElementById('versionTag').textContent = d.sha;
+    }).catch(() => {});
   </script>
 </body>
 </html>

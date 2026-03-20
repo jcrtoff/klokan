@@ -207,6 +207,8 @@
       const text = agentInput.value.trim();
       if (!text || ws.readyState !== WebSocket.OPEN) return;
 
+      clearTimeout(typingTimeout);
+      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false }));
       ws.send(JSON.stringify({ type: 'agent_message', content: text }));
       agentInput.value = '';
     }

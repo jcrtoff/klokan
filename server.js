@@ -174,7 +174,7 @@ async function handleUserMessage(content) {
 
   } catch (err) {
     console.error('Claude API error:', err.message);
-    const fallback = 'Désolée, je rencontre une difficulté technique. Rod vous contactera sous peu.';
+    const fallback = `Désolée, je rencontre une difficulté technique. ${AGENT_NAME} vous contactera sous peu.`;
     broadcast(chatClients, { type: 'stream_done' });
     broadcast(agentClients, { type: 'stream_done' });
     broadcast(chatClients, {

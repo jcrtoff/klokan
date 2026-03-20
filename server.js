@@ -13,6 +13,13 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 const AGENT_NAME = process.env.AGENT_NAME || 'Rod';
 
+// ── Pricing ─────────────────────────────────────────────────────────────────
+const PRICING = { inputPerMillion: 3, outputPerMillion: 15 };
+function calculateCost(inputTokens, outputTokens) {
+  return (inputTokens * PRICING.inputPerMillion / 1_000_000)
+       + (outputTokens * PRICING.outputPerMillion / 1_000_000);
+}
+
 // ── Static files ────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -64,7 +71,14 @@ Garde tes réponses courtes — 2-3 phrases max. Tu es dans un chat mobile.`;
 const state = {
   conversation: [],
   leadProfile: {},
-  agentControlled: false
+  agentControlled: false,
+  stats: {
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalCost: 0,
+    responseCount: 0,
+    totalResponseTime: 0
+  }
 };
 
 // ── WebSocket server ────────────────────────────────────────────────────────
@@ -102,6 +116,8 @@ wss.on('connection', (ws) => {
           }
           // Send current agent control state
           ws.send(JSON.stringify({ type: 'agent_control', active: state.agentControlled }));
+          // Send current session stats
+          ws.send(JSON.stringify({ type: 'session_stats', stats: state.stats }));
           // Send conversation history
           for (const entry of state.conversation) {
             ws.send(JSON.stringify({
@@ -163,6 +179,8 @@ async function handleUserMessage(content) {
   }));
 
   try {
+    const startTime = Date.now();
+
     const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 512,
@@ -178,7 +196,19 @@ async function handleUserMessage(content) {
       broadcast(agentClients, { type: 'stream_token', content: text });
     });
 
-    await stream.finalMessage();
+    const finalMsg = await stream.finalMessage();
+    const responseTime = Date.now() - startTime;
+
+    // Capture token usage
+    const inputTokens = finalMsg.usage.input_tokens;
+    const outputTokens = finalMsg.usage.output_tokens;
+    const cost = calculateCost(inputTokens, outputTokens);
+
+    state.stats.totalInputTokens += inputTokens;
+    state.stats.totalOutputTokens += outputTokens;
+    state.stats.totalCost += cost;
+    state.stats.responseCount += 1;
+    state.stats.totalResponseTime += responseTime;
 
     // Save assistant response
     const aiEntry = { role: 'assistant', content: fullResponse, timestamp: Date.now() };
@@ -186,6 +216,16 @@ async function handleUserMessage(content) {
 
     broadcast(chatClients, { type: 'stream_done' });
     broadcast(agentClients, { type: 'stream_done' });
+
+    // Send stream stats to agent only
+    broadcast(agentClients, {
+      type: 'stream_stats',
+      inputTokens,
+      outputTokens,
+      cost,
+      responseTime,
+      sessionStats: { ...state.stats }
+    });
 
     // Extract lead profile async — don't block
     extractLeadProfile().catch(() => {});
@@ -260,11 +300,26 @@ ${conversationText}
 
 Return only the JSON, no explanation, no markdown fences.`;
 
+  const extractionStart = Date.now();
+
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 256,
     messages: [{ role: 'user', content: extractionPrompt }]
   });
+
+  const extractionTime = Date.now() - extractionStart;
+
+  // Capture extraction token usage
+  const inputTokens = response.usage.input_tokens;
+  const outputTokens = response.usage.output_tokens;
+  const cost = calculateCost(inputTokens, outputTokens);
+
+  state.stats.totalInputTokens += inputTokens;
+  state.stats.totalOutputTokens += outputTokens;
+  state.stats.totalCost += cost;
+  state.stats.responseCount += 1;
+  state.stats.totalResponseTime += extractionTime;
 
   let text = response.content[0].text.trim();
   // Strip markdown fences if present
@@ -273,6 +328,16 @@ Return only the JSON, no explanation, no markdown fences.`;
   const profile = JSON.parse(text);
   state.leadProfile = profile;
   broadcast(agentClients, { type: 'lead_update', profile });
+
+  // Send extraction stats to agent only
+  broadcast(agentClients, {
+    type: 'lead_extraction_stats',
+    inputTokens,
+    outputTokens,
+    cost,
+    responseTime: extractionTime,
+    sessionStats: { ...state.stats }
+  });
 }
 
 // ── Start server ────────────────────────────────────────────────────────────

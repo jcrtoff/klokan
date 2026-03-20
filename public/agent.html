@@ -15,6 +15,21 @@
         <span class="connection-status" id="connStatus">En attente d'un client</span>
       </div>
 
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-item">
+          <span class="stat-label">Tokens</span>
+          <span class="stat-value" id="statTotalTokens">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Coût</span>
+          <span class="stat-value" id="statTotalCost">$0.0000</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Temps moy.</span>
+          <span class="stat-value" id="statAvgTime">—</span>
+        </div>
+      </div>
+
       <div class="agent-messages" id="messages"></div>
 
       <div class="agent-bottom">
@@ -85,6 +100,7 @@
     let ws;
     let intervening = false;
     let streamBubble = null;
+    let lastCompletedBubble = null;
     let typingTimeout = null;
 
     function connect() {
@@ -114,7 +130,28 @@
             break;
 
           case 'stream_done':
+            lastCompletedBubble = streamBubble;
             streamBubble = null;
+            break;
+
+          case 'stream_stats':
+            if (lastCompletedBubble) {
+              appendBubbleStats(lastCompletedBubble, msg, false);
+              scrollToBottom();
+            }
+            updateStatsBar(msg.sessionStats);
+            break;
+
+          case 'lead_extraction_stats':
+            if (lastCompletedBubble) {
+              appendBubbleStats(lastCompletedBubble, msg, true);
+              scrollToBottom();
+            }
+            updateStatsBar(msg.sessionStats);
+            break;
+
+          case 'session_stats':
+            updateStatsBar(msg.stats);
             break;
 
           case 'lead_update':
@@ -215,6 +252,34 @@
       if (p.notes && p.notes !== 'null') {
         document.getElementById('notesValue').textContent = p.notes;
       }
+    }
+
+    function updateStatsBar(stats) {
+      const totalTokens = stats.totalInputTokens + stats.totalOutputTokens;
+      document.getElementById('statTotalTokens').textContent = totalTokens.toLocaleString();
+      document.getElementById('statTotalCost').textContent = '$' + stats.totalCost.toFixed(4);
+      if (stats.responseCount > 0) {
+        const avg = Math.round(stats.totalResponseTime / stats.responseCount);
+        document.getElementById('statAvgTime').textContent = avg.toLocaleString() + 'ms';
+      }
+    }
+
+    function appendBubbleStats(bubble, data, isExtraction) {
+      let statsDiv = bubble.querySelector('.bubble-stats');
+      if (!statsDiv) {
+        statsDiv = document.createElement('div');
+        statsDiv.className = 'bubble-stats';
+        bubble.appendChild(statsDiv);
+      }
+
+      const line = document.createElement('div');
+      line.className = 'stats-line';
+      if (isExtraction) {
+        line.textContent = `  + extraction: ${data.inputTokens.toLocaleString()} in / ${data.outputTokens.toLocaleString()} out · $${data.cost.toFixed(4)} · ${data.responseTime.toLocaleString()}ms`;
+      } else {
+        line.textContent = `↳ ${data.inputTokens.toLocaleString()} in / ${data.outputTokens.toLocaleString()} out · $${data.cost.toFixed(4)} · ${data.responseTime.toLocaleString()}ms`;
+      }
+      statsDiv.appendChild(line);
     }
 
     // Intervenir toggle

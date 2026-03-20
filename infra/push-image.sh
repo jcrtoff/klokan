@@ -33,4 +33,6 @@ echo "Done. Image pushed to ${ECR_URI}:latest"
 
 if [[ "$ENV" == "prd" ]]; then
   "${SCRIPT_DIR}/../scripts/trigger_cluster_deploy.sh"
+  git commit --allow-empty -m "Deployed to production"
+  git push
 fi

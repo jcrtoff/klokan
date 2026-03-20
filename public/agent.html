@@ -167,6 +167,21 @@
     }
 
     function updateProfile(p) {
+      // Contact info
+      if (p.name && p.name !== 'null') {
+        document.getElementById('leadName').textContent = p.name;
+        const initials = p.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        document.getElementById('avatar').textContent = initials;
+        document.getElementById('avatar').classList.add('populated');
+      }
+
+      const contactParts = [];
+      if (p.email && p.email !== 'null') contactParts.push(p.email);
+      if (p.phone && p.phone !== 'null') contactParts.push(p.phone);
+      if (contactParts.length > 0) {
+        document.getElementById('leadContact').textContent = contactParts.join(' · ');
+      }
+
       const fields = {
         qProjectType: p.projectType,
         qBudget: p.budget,

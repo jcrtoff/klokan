@@ -51,6 +51,12 @@ QUALIFICATION: Au fil de la conversation, essaie naturellement d'extraire:
 - Délai: dans combien de temps?
 - Pré-approbation: oui / non / en cours
 
+COORDONNÉES: Quand le client montre un intérêt concret (veut planifier une rencontre, demande des listings, pose des questions précises sur un secteur):
+- Demande d'abord son prénom pour personnaliser l'échange
+- Ensuite, propose naturellement de laisser un courriel ou un numéro de téléphone pour que Rod puisse le contacter
+- Une seule info à la fois — ne fais jamais sentir que c'est un formulaire
+- Si le client décline, n'insiste pas et continue la conversation normalement
+
 Garde tes réponses courtes — 2-3 phrases max. Tu es dans un chat mobile.`;
 
 // ── In-memory state ─────────────────────────────────────────────────────────
@@ -235,6 +241,9 @@ async function extractLeadProfile() {
   const extractionPrompt = `Based on the conversation below, extract any real estate lead qualification data that has been mentioned or can be inferred. Return ONLY a JSON object with these exact keys (use null for unknown values):
 
 {
+  "name": "client's first name or full name, or null",
+  "email": "client's email address, or null",
+  "phone": "client's phone number, or null",
   "projectType": "achat|vente|investissement|location|null",
   "budget": "string or null",
   "neighbourhood": "string or null",

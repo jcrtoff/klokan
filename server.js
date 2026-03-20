@@ -13,11 +13,19 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 const AGENT_NAME = process.env.AGENT_NAME || 'Rod';
 
-// ── Pricing ─────────────────────────────────────────────────────────────────
-const PRICING = { inputPerMillion: 3, outputPerMillion: 15 };
-function calculateCost(inputTokens, outputTokens) {
-  return (inputTokens * PRICING.inputPerMillion / 1_000_000)
-       + (outputTokens * PRICING.outputPerMillion / 1_000_000);
+// ── Models & Pricing ────────────────────────────────────────────────────────
+const CHAT_MODEL = 'claude-sonnet-4-6';
+const EXTRACTION_MODEL = 'claude-haiku-4-5-20251001';
+
+const PRICING = {
+  [CHAT_MODEL]:       { inputPerMillion: 3, outputPerMillion: 15 },
+  [EXTRACTION_MODEL]: { inputPerMillion: 0.80, outputPerMillion: 4 },
+};
+
+function calculateCost(inputTokens, outputTokens, model) {
+  const p = PRICING[model] || PRICING[CHAT_MODEL];
+  return (inputTokens * p.inputPerMillion / 1_000_000)
+       + (outputTokens * p.outputPerMillion / 1_000_000);
 }
 
 // ── Static files ────────────────────────────────────────────────────────────
@@ -182,7 +190,7 @@ async function handleUserMessage(content) {
     const startTime = Date.now();
 
     const stream = anthropic.messages.stream({
-      model: 'claude-sonnet-4-6',
+      model: CHAT_MODEL,
       max_tokens: 512,
       system: SYSTEM_PROMPT,
       messages: apiMessages
@@ -202,7 +210,7 @@ async function handleUserMessage(content) {
     // Capture token usage
     const inputTokens = finalMsg.usage.input_tokens;
     const outputTokens = finalMsg.usage.output_tokens;
-    const cost = calculateCost(inputTokens, outputTokens);
+    const cost = calculateCost(inputTokens, outputTokens, CHAT_MODEL);
 
     state.stats.totalInputTokens += inputTokens;
     state.stats.totalOutputTokens += outputTokens;
@@ -303,7 +311,7 @@ Return only the JSON, no explanation, no markdown fences.`;
   const extractionStart = Date.now();
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: EXTRACTION_MODEL,
     max_tokens: 256,
     messages: [{ role: 'user', content: extractionPrompt }]
   });
@@ -313,7 +321,7 @@ Return only the JSON, no explanation, no markdown fences.`;
   // Capture extraction token usage
   const inputTokens = response.usage.input_tokens;
   const outputTokens = response.usage.output_tokens;
-  const cost = calculateCost(inputTokens, outputTokens);
+  const cost = calculateCost(inputTokens, outputTokens, EXTRACTION_MODEL);
 
   state.stats.totalInputTokens += inputTokens;
   state.stats.totalOutputTokens += outputTokens;

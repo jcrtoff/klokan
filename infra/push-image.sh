@@ -32,15 +32,5 @@ docker push "$ECR_URI:latest"
 echo "Done. Image pushed to ${ECR_URI}:latest"
 
 if [[ "$ENV" == "prd" ]]; then
-  CLUSTER_TOKEN_FILE="$HOME/.cluster_token"
-  if [[ ! -f "$CLUSTER_TOKEN_FILE" ]]; then
-    echo "Warning: $CLUSTER_TOKEN_FILE not found — skipping deploy trigger" >&2
-  else
-    echo "Triggering cluster deploy..."
-    curl -X POST https://cluster.toffsystems.com/deploy \
-      -H "Authorization: Bearer $(cat "$CLUSTER_TOKEN_FILE")" \
-      --fail-with-body
-    echo ""
-    echo "Deploy triggered."
-  fi
+  "${SCRIPT_DIR}/../scripts/trigger_cluster_deploy.sh"
 fi

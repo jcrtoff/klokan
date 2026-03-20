@@ -1,3 +1,4 @@
 node_modules
 .env
 .DS_Store
+.cluster_api_token

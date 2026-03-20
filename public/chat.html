@@ -39,19 +39,27 @@
 
     let ws;
     let streamBubble = null;
+    let sessionId = sessionStorage.getItem('rodcast_sessionId');
 
     function connect() {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
       ws = new WebSocket(`${proto}://${location.host}`);
 
       ws.onopen = () => {
-        ws.send(JSON.stringify({ type: 'identify', role: 'chat' }));
+        const identify = { type: 'identify', role: 'chat' };
+        if (sessionId) identify.sessionId = sessionId;
+        ws.send(JSON.stringify(identify));
       };
 
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
 
         switch (msg.type) {
+          case 'session_assigned':
+            sessionId = msg.sessionId;
+            sessionStorage.setItem('rodcast_sessionId', sessionId);
+            break;
+
           case 'message':
             addBubble(msg.role, msg.content, msg.agentName);
             break;

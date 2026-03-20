@@ -8,11 +8,21 @@
 </head>
 <body>
   <div class="agent-container">
-    <!-- Left pane: conversation -->
+    <!-- Left pane: session sidebar -->
+    <div class="agent-sidebar">
+      <div class="sidebar-header">
+        <h2>Sessions</h2>
+      </div>
+      <div class="session-list" id="sessionList">
+        <div class="session-empty">Aucune session active</div>
+      </div>
+    </div>
+
+    <!-- Center pane: conversation -->
     <div class="agent-left">
       <div class="agent-header">
         <h1>RodCast</h1>
-        <span class="connection-status" id="connStatus">En attente d'un client</span>
+        <span class="connection-status" id="connStatus">Connecté</span>
       </div>
 
       <div class="stats-bar" id="statsBar">
@@ -30,11 +40,13 @@
         </div>
       </div>
 
-      <div class="agent-messages" id="messages"></div>
+      <div class="agent-messages" id="messages">
+        <div class="no-session-selected">Sélectionnez une session à gauche</div>
+      </div>
 
       <div class="agent-bottom">
         <div class="agent-status" id="agentStatus">IA en conversation</div>
-        <button class="intervenir-btn" id="intervenirBtn">Intervenir</button>
+        <button class="intervenir-btn" id="intervenirBtn" disabled>Intervenir</button>
         <div class="agent-compose" id="composeBar">
           <input type="text" id="agentInput" placeholder="Écrire au client…" autocomplete="off">
           <button id="agentSendBtn">Envoyer</button>
@@ -89,19 +101,21 @@
   </div>
 
   <script>
-    const messages = document.getElementById('messages');
+    const messagesEl = document.getElementById('messages');
     const intervenirBtn = document.getElementById('intervenirBtn');
     const composeBar = document.getElementById('composeBar');
     const agentInput = document.getElementById('agentInput');
     const agentSendBtn = document.getElementById('agentSendBtn');
     const agentStatus = document.getElementById('agentStatus');
     const connStatus = document.getElementById('connStatus');
+    const sessionListEl = document.getElementById('sessionList');
 
     let ws;
     let intervening = false;
     let streamBubble = null;
     let lastCompletedBubble = null;
     let typingTimeout = null;
+    let activeSessionId = null;
 
     function connect() {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -116,60 +130,85 @@
         const msg = JSON.parse(e.data);
 
         switch (msg.type) {
+          case 'session_list':
+            renderSessionList(msg.sessions);
+            break;
+
+          case 'session_closed':
+            if (activeSessionId === msg.sessionId) {
+              clearSessionView();
+              activeSessionId = null;
+              intervenirBtn.disabled = true;
+            }
+            break;
+
           case 'message':
-            addBubble(msg.role, msg.content, msg.agentName);
+            if (msg.sessionId === activeSessionId) {
+              addBubble(msg.role, msg.content, msg.agentName);
+            }
             break;
 
           case 'stream_token':
-            if (!streamBubble) {
-              streamBubble = createBubble('ai');
-              messages.appendChild(streamBubble);
+            if (msg.sessionId === activeSessionId) {
+              if (!streamBubble) {
+                streamBubble = createBubble('ai');
+                messagesEl.appendChild(streamBubble);
+              }
+              streamBubble.textContent += msg.content;
+              scrollToBottom();
             }
-            streamBubble.textContent += msg.content;
-            scrollToBottom();
             break;
 
           case 'stream_done':
-            lastCompletedBubble = streamBubble;
-            streamBubble = null;
+            if (msg.sessionId === activeSessionId) {
+              lastCompletedBubble = streamBubble;
+              streamBubble = null;
+            } else if (msg.sessionId !== activeSessionId) {
+              // Reset stream bubble if it was for a different session
+              streamBubble = null;
+            }
             break;
 
           case 'stream_stats':
-            if (lastCompletedBubble) {
-              appendBubbleStats(lastCompletedBubble, msg, false);
-              scrollToBottom();
+            if (msg.sessionId === activeSessionId) {
+              if (lastCompletedBubble) {
+                appendBubbleStats(lastCompletedBubble, msg, false);
+                scrollToBottom();
+              }
+              updateStatsBar(msg.sessionStats);
             }
-            updateStatsBar(msg.sessionStats);
             break;
 
           case 'lead_extraction_stats':
-            if (lastCompletedBubble) {
-              appendBubbleStats(lastCompletedBubble, msg, true);
-              scrollToBottom();
+            if (msg.sessionId === activeSessionId) {
+              if (lastCompletedBubble) {
+                appendBubbleStats(lastCompletedBubble, msg, true);
+                scrollToBottom();
+              }
+              updateStatsBar(msg.sessionStats);
             }
-            updateStatsBar(msg.sessionStats);
             break;
 
           case 'session_stats':
-            updateStatsBar(msg.stats);
+            if (msg.sessionId === activeSessionId) {
+              updateStatsBar(msg.stats);
+            }
             break;
 
           case 'lead_update':
-            updateProfile(msg.profile);
+            if (msg.sessionId === activeSessionId) {
+              updateProfile(msg.profile);
+            }
             break;
 
           case 'agent_control':
-            intervening = msg.active;
-            composeBar.classList.toggle('visible', intervening);
-            intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
-            intervenirBtn.classList.toggle('active', intervening);
-            agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
-            break;
-
-          case 'client_count':
-            connStatus.textContent = msg.count > 0
-              ? `${msg.count} client${msg.count > 1 ? 's' : ''} connecté${msg.count > 1 ? 's' : ''}`
-              : "En attente d'un client";
+            if (msg.sessionId === activeSessionId) {
+              intervening = msg.active;
+              composeBar.classList.toggle('visible', intervening);
+              intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
+              intervenirBtn.classList.toggle('active', intervening);
+              agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+            }
             break;
         }
       };
@@ -178,6 +217,95 @@
         connStatus.textContent = 'Déconnecté';
         setTimeout(connect, 2000);
       };
+    }
+
+    function renderSessionList(sessionsList) {
+      if (sessionsList.length === 0) {
+        sessionListEl.innerHTML = '<div class="session-empty">Aucune session active</div>';
+        return;
+      }
+
+      sessionListEl.innerHTML = '';
+      for (const s of sessionsList) {
+        const item = document.createElement('div');
+        item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '');
+        item.dataset.sessionId = s.id;
+
+        const name = s.leadName || 'Nouveau client';
+        const score = s.leadScore ? s.leadScore.toLowerCase() : 'froid';
+        const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : score;
+
+        item.innerHTML =
+          '<div class="session-item-top">' +
+            '<span class="session-score-dot ' + scoreClass + '"></span>' +
+            '<span class="session-name">' + escapeHtml(name) + '</span>' +
+          '</div>' +
+          '<div class="session-item-bottom">' +
+            '<span class="session-msg-count">' + s.messageCount + ' msg</span>' +
+            (s.agentControlled ? '<span class="session-agent-badge">Agent</span>' : '') +
+          '</div>';
+
+        item.addEventListener('click', () => selectSession(s.id));
+        sessionListEl.appendChild(item);
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function selectSession(sessionId) {
+      activeSessionId = sessionId;
+      clearSessionView();
+      intervenirBtn.disabled = false;
+      intervening = false;
+      composeBar.classList.remove('visible');
+      intervenirBtn.textContent = 'Intervenir';
+      intervenirBtn.classList.remove('active');
+      agentStatus.textContent = 'IA en conversation';
+      streamBubble = null;
+      lastCompletedBubble = null;
+
+      // Highlight in sidebar
+      document.querySelectorAll('.session-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.sessionId === sessionId);
+      });
+
+      // Request full session state from server
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'select_session', sessionId }));
+      }
+    }
+
+    function clearSessionView() {
+      messagesEl.innerHTML = '';
+      resetProfile();
+      resetStatsBar();
+    }
+
+    function resetProfile() {
+      document.getElementById('leadName').textContent = 'Client inconnu';
+      document.getElementById('avatar').textContent = '—';
+      document.getElementById('avatar').classList.remove('populated');
+      document.getElementById('leadContact').textContent = '—';
+      document.getElementById('scoreBadge').textContent = 'FROID';
+      document.getElementById('scoreBadge').className = 'score-badge froid';
+      document.getElementById('notesValue').textContent = 'Aucune note pour le moment.';
+
+      const fields = ['qProjectType', 'qBudget', 'qNeighbourhood', 'qPropertyType', 'qTimeline', 'qPreApproval'];
+      for (const id of fields) {
+        const el = document.getElementById(id);
+        el.textContent = '—';
+        el.classList.remove('populated');
+      }
+    }
+
+    function resetStatsBar() {
+      document.getElementById('statTotalTokens').textContent = '0';
+      document.getElementById('statTotalCost').textContent = '$0.0000';
+      document.getElementById('statAvgTime').textContent = '—';
     }
 
     function createBubble(role) {
@@ -196,16 +324,15 @@
       }
       const text = document.createTextNode(content);
       div.appendChild(text);
-      messages.appendChild(div);
+      messagesEl.appendChild(div);
       scrollToBottom();
     }
 
     function scrollToBottom() {
-      messages.scrollTop = messages.scrollHeight;
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     function updateProfile(p) {
-      // Contact info
       if (p.name && p.name !== 'null') {
         document.getElementById('leadName').textContent = p.name;
         const initials = p.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -237,7 +364,6 @@
         }
       }
 
-      // Score badge
       const badge = document.getElementById('scoreBadge');
       if (p.leadScore && p.leadScore !== 'null') {
         const score = p.leadScore.toLowerCase();
@@ -248,7 +374,6 @@
         else if (score === 'chaud') badge.classList.add('chaud');
       }
 
-      // Notes
       if (p.notes && p.notes !== 'null') {
         document.getElementById('notesValue').textContent = p.notes;
       }
@@ -284,6 +409,7 @@
 
     // Intervenir toggle
     intervenirBtn.addEventListener('click', () => {
+      if (!activeSessionId) return;
       intervening = !intervening;
       composeBar.classList.toggle('visible', intervening);
       intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
@@ -291,17 +417,17 @@
       agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
       if (intervening) agentInput.focus();
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'agent_control', active: intervening }));
+        ws.send(JSON.stringify({ type: 'agent_control', active: intervening, sessionId: activeSessionId }));
       }
     });
 
     function sendAgentMessage() {
       const text = agentInput.value.trim();
-      if (!text || ws.readyState !== WebSocket.OPEN) return;
+      if (!text || !activeSessionId || ws.readyState !== WebSocket.OPEN) return;
 
       clearTimeout(typingTimeout);
-      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false }));
-      ws.send(JSON.stringify({ type: 'agent_message', content: text }));
+      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false, sessionId: activeSessionId }));
+      ws.send(JSON.stringify({ type: 'agent_message', content: text, sessionId: activeSessionId }));
       agentInput.value = '';
     }
 
@@ -310,13 +436,12 @@
       if (e.key === 'Enter') sendAgentMessage();
     });
 
-    // Send agent_typing events
     agentInput.addEventListener('input', () => {
-      if (ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: true }));
+      if (!activeSessionId || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: true, sessionId: activeSessionId }));
       clearTimeout(typingTimeout);
       typingTimeout = setTimeout(() => {
-        ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false }));
+        ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false, sessionId: activeSessionId }));
       }, 1500);
     });
 

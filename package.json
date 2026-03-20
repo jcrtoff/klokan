@@ -5,7 +5,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "dev:doppler": "./scripts/deploy-local.sh",
-    "deploy": "./scripts/deploy-production.sh"
+    "deploy": "./infra/push-image.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

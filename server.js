@@ -259,4 +259,5 @@ server.listen(PORT, () => {
   console.log(`RodCast server running on http://localhost:${PORT}`);
   console.log(`  Chat: http://localhost:${PORT}/chat`);
   console.log(`  Agent: http://localhost:${PORT}/agent`);
+  console.log(`  SHA: ${process.env.COMMIT_SHA || 'dev'}`);
 });

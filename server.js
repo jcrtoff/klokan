@@ -20,7 +20,7 @@ const EXTRACTION_MODEL = 'claude-haiku-4-5-20251001';
 
 const PRICING = {
   [CHAT_MODEL]:       { inputPerMillion: 3, outputPerMillion: 15 },
-  [EXTRACTION_MODEL]: { inputPerMillion: 0.80, outputPerMillion: 4 },
+  [EXTRACTION_MODEL]: { inputPerMillion: 1, outputPerMillion: 5 },
 };
 
 function calculateCost(inputTokens, outputTokens, model) {

@@ -5,7 +5,7 @@ Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for Rod, a
 ## Tech stack
 
 - **Runtime**: Node.js 20, Express 4, WebSocket (`ws`)
-- **AI**: Anthropic Claude API (`@anthropic-ai/sdk`), model `claude-sonnet-4-6`
+- **AI**: Anthropic Claude API (`@anthropic-ai/sdk`), chat model `claude-sonnet-4-6`, extraction model `claude-haiku-4-5-20251001`
 - **Frontend**: Vanilla HTML/CSS/JS (no build step)
 - **Infra**: Docker, AWS ECR, CloudFormation/SAM
 
@@ -16,8 +16,9 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 - **`/chat`** — mobile-first client UI for end users
 - **`/agent`** — desktop dashboard for the broker (Rod)
 - **`/health`** — health check endpoint
+- **`/api/version`** — returns commit SHA and uptime
 - **WebSocket flow**: clients identify as `chat` or `agent` role. User messages trigger Claude streaming responses. Agent (Rod) can send messages directly (no AI response triggered). Lead profile extraction runs async after each AI response.
-- **State**: in-memory only (`state.conversation[]`, `state.leadProfile{}`), no database. Resets on restart.
+- **State**: in-memory per-session `sessions` Map (conversation history, lead profile, token/cost tracking per session). No database. Sessions auto-cleanup after 30min inactivity. Resets on restart.
 
 ## Key files
 
@@ -32,6 +33,7 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 | `infra/template.yaml` | CloudFormation — ECR repos (scan on push, keep last 10 images) |
 | `infra/deploy.sh` | Create/update CloudFormation stacks |
 | `infra/push-image.sh` | Build Docker image (linux/amd64), push to ECR, trigger cluster deploy for prd |
+| `scripts/trigger_cluster_deploy.sh` | Triggers deploy webhook on cluster |
 | `Dockerfile` | Node 20 Alpine, non-root user, healthcheck |
 
 ## Environment variables
@@ -71,7 +73,7 @@ npm run dev
 
 - Docker image built for `linux/amd64` with git SHA as build arg
 - ECR repos: `rodcast-dev`, `rodcast-prd`
-- For `prd`: triggers deploy webhook at `cluster.toffsystems.com` using token from `~/.cluster_token`
+- For `prd`: triggers deploy webhook at `cluster.toffsystems.com` using token from `.cluster_api_token` (project root)
 
 ## Conventions
 

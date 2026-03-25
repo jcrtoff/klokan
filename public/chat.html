@@ -20,7 +20,7 @@
       <div class="typing-indicator" id="typingIndicator">
         <span></span><span></span><span></span>
       </div>
-      <div class="agent-typing-indicator" id="agentTyping">Rod est en train d'écrire…</div>
+      <div class="broker-typing-indicator" id="brokerTyping">Rod est en train d'écrire…</div>
     </div>
 
     <div class="input-bar">
@@ -35,7 +35,7 @@
     const msgInput = document.getElementById('msgInput');
     const sendBtn = document.getElementById('sendBtn');
     const typingIndicator = document.getElementById('typingIndicator');
-    const agentTyping = document.getElementById('agentTyping');
+    const brokerTyping = document.getElementById('brokerTyping');
 
     let ws;
     let streamBubble = null;
@@ -61,7 +61,7 @@
             break;
 
           case 'message':
-            addBubble(msg.role, msg.content, msg.agentName);
+            addBubble(msg.role, msg.content, msg.brokerName);
             break;
 
           case 'stream_token':
@@ -78,8 +78,8 @@
             streamBubble = null;
             break;
 
-          case 'agent_typing':
-            agentTyping.classList.toggle('visible', msg.isTyping);
+          case 'broker_typing':
+            brokerTyping.classList.toggle('visible', msg.isTyping);
             scrollToBottom();
             break;
         }
@@ -96,12 +96,12 @@
       return div;
     }
 
-    function addBubble(role, content, agentName) {
+    function addBubble(role, content, brokerName) {
       const div = createBubble(role);
-      if (role === 'agent' && agentName) {
+      if (role === 'broker' && brokerName) {
         const label = document.createElement('div');
-        label.className = 'agent-label';
-        label.textContent = agentName;
+        label.className = 'broker-label';
+        label.textContent = brokerName;
         div.appendChild(label);
       }
       const text = document.createTextNode(content);

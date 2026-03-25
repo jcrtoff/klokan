@@ -103,14 +103,14 @@ body {
   border-bottom-left-radius: 4px;
 }
 
-.bubble.agent {
+.bubble.broker {
   align-self: flex-start;
   background: var(--amber-50);
   border: 1px solid rgba(133,79,11,0.15);
   border-bottom-left-radius: 4px;
 }
 
-.bubble.agent .agent-label {
+.bubble.broker .broker-label {
   font-size: 11px;
   font-weight: 700;
   color: var(--amber-600);
@@ -150,7 +150,7 @@ body {
   30% { transform: translateY(-4px); opacity: 1; }
 }
 
-.agent-typing-indicator {
+.broker-typing-indicator {
   display: none;
   align-self: flex-start;
   font-size: 13px;
@@ -159,7 +159,7 @@ body {
   font-style: italic;
 }
 
-.agent-typing-indicator.visible { display: block; }
+.broker-typing-indicator.visible { display: block; }
 
 /* ── Input bar ───────────────────────────────────────────────── */
 .input-bar {
@@ -201,15 +201,15 @@ body {
 .input-bar button:hover { background: var(--teal-800); }
 .input-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Agent layout ────────────────────────────────────────────── */
-.agent-container {
+/* ── Broker layout ───────────────────────────────────────────── */
+.broker-container {
   display: grid;
   grid-template-columns: 220px 1fr 340px;
   height: 100vh;
 }
 
 /* ── Session sidebar ────────────────────────────────────────── */
-.agent-sidebar {
+.broker-sidebar {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
@@ -299,7 +299,7 @@ body {
   color: var(--text-secondary);
 }
 
-.session-agent-badge {
+.session-broker-badge {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -319,20 +319,20 @@ body {
   color: var(--text-secondary);
 }
 
-.agent-left {
+.broker-left {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
   background: var(--bg);
 }
 
-.agent-right {
+.broker-right {
   background: var(--surface);
   padding: 24px;
   overflow-y: auto;
 }
 
-.agent-header {
+.broker-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -342,7 +342,7 @@ body {
   flex-shrink: 0;
 }
 
-.agent-header h1 {
+.broker-header h1 {
   font-size: 16px;
   font-weight: 600;
 }
@@ -352,7 +352,7 @@ body {
   color: var(--text-secondary);
 }
 
-.agent-messages {
+.broker-messages {
   flex: 1;
   overflow-y: auto;
   padding: 16px 20px;
@@ -361,8 +361,8 @@ body {
   gap: 8px;
 }
 
-/* ── Intervenir button & compose ─────────────────────────────── */
-.agent-bottom {
+/* ── Intervenir button & broker compose ──────────────────────── */
+.broker-bottom {
   padding: 12px 20px;
   background: var(--surface);
   border-top: 1px solid var(--border);
@@ -393,15 +393,15 @@ body {
   border-color: var(--teal-600);
 }
 
-.agent-compose {
+.broker-compose {
   display: none;
   gap: 8px;
   margin-top: 10px;
 }
 
-.agent-compose.visible { display: flex; }
+.broker-compose.visible { display: flex; }
 
-.agent-compose input {
+.broker-compose input {
   flex: 1;
   padding: 10px 14px;
   border: 1px solid var(--border);
@@ -411,9 +411,9 @@ body {
   background: var(--bg);
 }
 
-.agent-compose input:focus { border-color: var(--amber-600); }
+.broker-compose input:focus { border-color: var(--amber-600); }
 
-.agent-compose button {
+.broker-compose button {
   padding: 10px 18px;
   background: var(--amber-600);
   color: #fff;
@@ -424,7 +424,7 @@ body {
   cursor: pointer;
 }
 
-.agent-status {
+.broker-status {
   text-align: center;
   font-size: 13px;
   color: var(--teal-600);

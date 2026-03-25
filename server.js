@@ -12,7 +12,7 @@ const app = express();
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 3000;
-const AGENT_NAME = process.env.AGENT_NAME || 'Rod';
+const BROKER_NAME = process.env.BROKER_NAME || 'Rod';
 
 // ── Models & Pricing ────────────────────────────────────────────────────────
 const CHAT_MODEL = 'claude-sonnet-4-6';
@@ -33,7 +33,7 @@ function calculateCost(inputTokens, outputTokens, model) {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/chat', (_req, res) => res.sendFile(path.join(__dirname, 'public/chat.html')));
-app.get('/agent', (_req, res) => res.sendFile(path.join(__dirname, 'public/agent.html')));
+app.get('/broker', (_req, res) => res.sendFile(path.join(__dirname, 'public/broker.html')));
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.get('/api/version', (_req, res) => res.json({ sha: process.env.COMMIT_SHA || 'dev' }));
 
@@ -86,7 +86,7 @@ function createSession(id) {
     id,
     conversation: [],
     leadProfile: {},
-    agentControlled: false,
+    brokerControlled: false,
     stats: {
       totalInputTokens: 0,
       totalOutputTokens: 0,
@@ -111,7 +111,7 @@ function getSessionSummary(session) {
       ? session.leadProfile.leadScore : null,
     messageCount: session.conversation.length,
     lastActivity: session.lastActivity,
-    agentControlled: session.agentControlled
+    brokerControlled: session.brokerControlled
   };
 }
 
@@ -123,7 +123,7 @@ function getSessionList() {
 
 // ── WebSocket server ────────────────────────────────────────────────────────
 const wss = new WebSocketServer({ server });
-const agentClients = new Set();
+const brokerClients = new Set();
 
 function broadcast(clients, data) {
   const json = JSON.stringify(data);
@@ -133,13 +133,13 @@ function broadcast(clients, data) {
 }
 
 function broadcastSessionList() {
-  broadcast(agentClients, { type: 'session_list', sessions: getSessionList() });
+  broadcast(brokerClients, { type: 'session_list', sessions: getSessionList() });
 }
 
 function sendSessionState(ws, session) {
-  // Send full state for a session to an agent
+  // Send full state for a session to a broker
   ws.send(JSON.stringify({ type: 'lead_update', profile: session.leadProfile, sessionId: session.id }));
-  ws.send(JSON.stringify({ type: 'agent_control', active: session.agentControlled, sessionId: session.id }));
+  ws.send(JSON.stringify({ type: 'broker_control', active: session.brokerControlled, sessionId: session.id }));
   ws.send(JSON.stringify({ type: 'session_stats', stats: session.stats, sessionId: session.id }));
 
   // Send conversation history
@@ -148,7 +148,7 @@ function sendSessionState(ws, session) {
       type: 'message',
       role: entry.role === 'assistant' ? 'ai' : entry.displayRole || entry.role,
       content: entry.content,
-      agentName: entry.agentName,
+      brokerName: entry.brokerName,
       timestamp: entry.timestamp,
       sessionId: session.id
     }));
@@ -181,9 +181,9 @@ wss.on('connection', (ws) => {
           ws.sessionId = session.id;
           ws.send(JSON.stringify({ type: 'session_assigned', sessionId: session.id }));
           broadcastSessionList();
-        } else if (msg.role === 'agent') {
-          agentClients.add(ws);
-          ws.role = 'agent';
+        } else if (msg.role === 'broker') {
+          brokerClients.add(ws);
+          ws.role = 'broker';
           // Send current session list
           ws.send(JSON.stringify({ type: 'session_list', sessions: getSessionList() }));
         }
@@ -195,26 +195,26 @@ wss.on('connection', (ws) => {
         break;
       }
 
-      case 'agent_message': {
+      case 'broker_message': {
         const session = sessions.get(msg.sessionId);
-        if (session) handleAgentMessage(session, msg.content);
+        if (session) handleBrokerMessage(session, msg.content);
         break;
       }
 
-      case 'agent_control': {
+      case 'broker_control': {
         const session = sessions.get(msg.sessionId);
         if (session) {
-          session.agentControlled = !!msg.active;
-          broadcast(session.chatClients, { type: 'agent_control', active: session.agentControlled });
+          session.brokerControlled = !!msg.active;
+          broadcast(session.chatClients, { type: 'broker_control', active: session.brokerControlled });
           broadcastSessionList();
         }
         break;
       }
 
-      case 'agent_typing': {
+      case 'broker_typing': {
         const session = sessions.get(msg.sessionId);
         if (session) {
-          broadcast(session.chatClients, { type: 'agent_typing', isTyping: msg.isTyping });
+          broadcast(session.chatClients, { type: 'broker_typing', isTyping: msg.isTyping });
         }
         break;
       }
@@ -239,7 +239,7 @@ wss.on('connection', (ws) => {
           const timeout = setTimeout(() => {
             sessions.delete(session.id);
             sessionTimeouts.delete(session.id);
-            broadcast(agentClients, { type: 'session_closed', sessionId: session.id });
+            broadcast(brokerClients, { type: 'session_closed', sessionId: session.id });
             broadcastSessionList();
           }, 30 * 60 * 1000);
           sessionTimeouts.set(session.id, timeout);
@@ -247,8 +247,8 @@ wss.on('connection', (ws) => {
         broadcastSessionList();
       }
     }
-    if (ws.role === 'agent') {
-      agentClients.delete(ws);
+    if (ws.role === 'broker') {
+      brokerClients.delete(ws);
     }
   });
 });
@@ -259,21 +259,21 @@ async function handleUserMessage(session, content) {
   const userEntry = { role: 'user', content, displayRole: 'user', timestamp: Date.now() };
   session.conversation.push(userEntry);
 
-  // Broadcast user message to agent clients
-  broadcast(agentClients, {
+  // Broadcast user message to broker clients
+  broadcast(brokerClients, {
     type: 'message', role: 'user', content, timestamp: userEntry.timestamp, sessionId: session.id
   });
 
   broadcastSessionList();
 
-  // If agent has taken control, skip Claude response
-  if (session.agentControlled) return;
+  // If broker has taken control, skip Claude response
+  if (session.brokerControlled) return;
 
   // Build messages for Claude API
   const apiMessages = session.conversation.map(entry => ({
     role: entry.role === 'assistant' ? 'assistant' : 'user',
-    content: entry.role === 'agent'
-      ? `[${entry.agentName || AGENT_NAME}]: ${entry.content}`
+    content: entry.role === 'broker'
+      ? `[${entry.brokerName || BROKER_NAME}]: ${entry.content}`
       : entry.content
   }));
 
@@ -292,7 +292,7 @@ async function handleUserMessage(session, content) {
     stream.on('text', (text) => {
       fullResponse += text;
       broadcast(session.chatClients, { type: 'stream_token', content: text, sessionId: session.id });
-      broadcast(agentClients, { type: 'stream_token', content: text, sessionId: session.id });
+      broadcast(brokerClients, { type: 'stream_token', content: text, sessionId: session.id });
     });
 
     const finalMsg = await stream.finalMessage();
@@ -314,10 +314,10 @@ async function handleUserMessage(session, content) {
     session.conversation.push(aiEntry);
 
     broadcast(session.chatClients, { type: 'stream_done', sessionId: session.id });
-    broadcast(agentClients, { type: 'stream_done', sessionId: session.id });
+    broadcast(brokerClients, { type: 'stream_done', sessionId: session.id });
 
-    // Send stream stats to agent only
-    broadcast(agentClients, {
+    // Send stream stats to broker only
+    broadcast(brokerClients, {
       type: 'stream_stats',
       inputTokens,
       outputTokens,
@@ -334,43 +334,43 @@ async function handleUserMessage(session, content) {
 
   } catch (err) {
     console.error('Claude API error:', err.message);
-    const fallback = `Désolée, je rencontre une difficulté technique. ${AGENT_NAME} vous contactera sous peu.`;
+    const fallback = `Désolée, je rencontre une difficulté technique. ${BROKER_NAME} vous contactera sous peu.`;
     broadcast(session.chatClients, { type: 'stream_done', sessionId: session.id });
-    broadcast(agentClients, { type: 'stream_done', sessionId: session.id });
+    broadcast(brokerClients, { type: 'stream_done', sessionId: session.id });
     broadcast(session.chatClients, {
       type: 'message', role: 'ai', content: fallback, timestamp: Date.now(), sessionId: session.id
     });
-    broadcast(agentClients, {
+    broadcast(brokerClients, {
       type: 'message', role: 'ai', content: fallback, timestamp: Date.now(), sessionId: session.id
     });
   }
 }
 
-// ── Handle agent message ────────────────────────────────────────────────────
-function handleAgentMessage(session, content) {
+// ── Handle broker message ───────────────────────────────────────────────────
+function handleBrokerMessage(session, content) {
   session.lastActivity = Date.now();
-  const agentEntry = {
-    role: 'agent',
+  const brokerEntry = {
+    role: 'broker',
     content,
-    agentName: AGENT_NAME,
-    displayRole: 'agent',
+    brokerName: BROKER_NAME,
+    displayRole: 'broker',
     timestamp: Date.now()
   };
-  session.conversation.push(agentEntry);
+  session.conversation.push(brokerEntry);
 
   const msgPayload = {
     type: 'message',
-    role: 'agent',
+    role: 'broker',
     content,
-    agentName: AGENT_NAME,
-    timestamp: agentEntry.timestamp,
+    brokerName: BROKER_NAME,
+    timestamp: brokerEntry.timestamp,
     sessionId: session.id
   };
 
   broadcast(session.chatClients, msgPayload);
-  broadcast(agentClients, msgPayload);
+  broadcast(brokerClients, msgPayload);
   broadcastSessionList();
-  // Agent messages do NOT trigger Claude response
+  // Broker messages do NOT trigger Claude response
 }
 
 // ── Lead profile extraction ─────────────────────────────────────────────────
@@ -379,7 +379,7 @@ async function extractLeadProfile(session) {
     .map(e => {
       if (e.role === 'user') return `Client: ${e.content}`;
       if (e.role === 'assistant') return `Roxanne: ${e.content}`;
-      if (e.role === 'agent') return `${e.agentName || AGENT_NAME}: ${e.content}`;
+      if (e.role === 'broker') return `${e.brokerName || BROKER_NAME}: ${e.content}`;
       return '';
     })
     .join('\n');
@@ -432,10 +432,10 @@ Return only the JSON, no explanation, no markdown fences.`;
 
   const profile = JSON.parse(text);
   session.leadProfile = profile;
-  broadcast(agentClients, { type: 'lead_update', profile, sessionId: session.id });
+  broadcast(brokerClients, { type: 'lead_update', profile, sessionId: session.id });
 
-  // Send extraction stats to agent only
-  broadcast(agentClients, {
+  // Send extraction stats to broker only
+  broadcast(brokerClients, {
     type: 'lead_extraction_stats',
     inputTokens,
     outputTokens,
@@ -452,6 +452,6 @@ Return only the JSON, no explanation, no markdown fences.`;
 server.listen(PORT, () => {
   console.log(`RodCast server running on http://localhost:${PORT}`);
   console.log(`  Chat: http://localhost:${PORT}/chat`);
-  console.log(`  Agent: http://localhost:${PORT}/agent`);
+  console.log(`  Broker: http://localhost:${PORT}/broker`);
   console.log(`  SHA: ${process.env.COMMIT_SHA || 'dev'}`);
 });

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent — RodCast</title>
+  <title>Courtier — RodCast</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="agent-container">
+  <div class="broker-container">
     <!-- Left pane: session sidebar -->
-    <div class="agent-sidebar">
+    <div class="broker-sidebar">
       <div class="sidebar-header">
         <h2>Sessions</h2>
       </div>
@@ -19,8 +19,8 @@
     </div>
 
     <!-- Center pane: conversation -->
-    <div class="agent-left">
-      <div class="agent-header">
+    <div class="broker-left">
+      <div class="broker-header">
         <h1>RodCast</h1>
         <span class="connection-status" id="connStatus">Connecté</span>
       </div>
@@ -40,22 +40,22 @@
         </div>
       </div>
 
-      <div class="agent-messages" id="messages">
+      <div class="broker-messages" id="messages">
         <div class="no-session-selected">Sélectionnez une session à gauche</div>
       </div>
 
-      <div class="agent-bottom">
-        <div class="agent-status" id="agentStatus">IA en conversation</div>
+      <div class="broker-bottom">
+        <div class="broker-status" id="brokerStatus">IA en conversation</div>
         <button class="intervenir-btn" id="intervenirBtn" disabled>Intervenir</button>
-        <div class="agent-compose" id="composeBar">
-          <input type="text" id="agentInput" placeholder="Écrire au client…" autocomplete="off">
-          <button id="agentSendBtn">Envoyer</button>
+        <div class="broker-compose" id="composeBar">
+          <input type="text" id="brokerInput" placeholder="Écrire au client…" autocomplete="off">
+          <button id="brokerSendBtn">Envoyer</button>
         </div>
       </div>
     </div>
 
     <!-- Right pane: lead profile -->
-    <div class="agent-right">
+    <div class="broker-right">
       <div class="lead-card">
         <div class="lead-avatar" id="avatar">—</div>
         <div class="lead-name" id="leadName">Client inconnu</div>
@@ -104,9 +104,9 @@
     const messagesEl = document.getElementById('messages');
     const intervenirBtn = document.getElementById('intervenirBtn');
     const composeBar = document.getElementById('composeBar');
-    const agentInput = document.getElementById('agentInput');
-    const agentSendBtn = document.getElementById('agentSendBtn');
-    const agentStatus = document.getElementById('agentStatus');
+    const brokerInput = document.getElementById('brokerInput');
+    const brokerSendBtn = document.getElementById('brokerSendBtn');
+    const brokerStatus = document.getElementById('brokerStatus');
     const connStatus = document.getElementById('connStatus');
     const sessionListEl = document.getElementById('sessionList');
 
@@ -122,7 +122,7 @@
       ws = new WebSocket(`${proto}://${location.host}`);
 
       ws.onopen = () => {
-        ws.send(JSON.stringify({ type: 'identify', role: 'agent' }));
+        ws.send(JSON.stringify({ type: 'identify', role: 'broker' }));
         connStatus.textContent = 'Connecté';
       };
 
@@ -144,7 +144,7 @@
 
           case 'message':
             if (msg.sessionId === activeSessionId) {
-              addBubble(msg.role, msg.content, msg.agentName);
+              addBubble(msg.role, msg.content, msg.brokerName);
             }
             break;
 
@@ -201,13 +201,13 @@
             }
             break;
 
-          case 'agent_control':
+          case 'broker_control':
             if (msg.sessionId === activeSessionId) {
               intervening = msg.active;
               composeBar.classList.toggle('visible', intervening);
               intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
               intervenirBtn.classList.toggle('active', intervening);
-              agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+              brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
             }
             break;
         }
@@ -242,7 +242,7 @@
           '</div>' +
           '<div class="session-item-bottom">' +
             '<span class="session-msg-count">' + s.messageCount + ' msg</span>' +
-            (s.agentControlled ? '<span class="session-agent-badge">Agent</span>' : '') +
+            (s.brokerControlled ? '<span class="session-broker-badge">Courtier</span>' : '') +
           '</div>';
 
         item.addEventListener('click', () => selectSession(s.id));
@@ -264,7 +264,7 @@
       composeBar.classList.remove('visible');
       intervenirBtn.textContent = 'Intervenir';
       intervenirBtn.classList.remove('active');
-      agentStatus.textContent = 'IA en conversation';
+      brokerStatus.textContent = 'IA en conversation';
       streamBubble = null;
       lastCompletedBubble = null;
 
@@ -314,12 +314,12 @@
       return div;
     }
 
-    function addBubble(role, content, agentName) {
+    function addBubble(role, content, brokerName) {
       const div = createBubble(role);
-      if (role === 'agent' && agentName) {
+      if (role === 'broker' && brokerName) {
         const label = document.createElement('div');
-        label.className = 'agent-label';
-        label.textContent = agentName;
+        label.className = 'broker-label';
+        label.textContent = brokerName;
         div.appendChild(label);
       }
       const text = document.createTextNode(content);
@@ -414,34 +414,34 @@
       composeBar.classList.toggle('visible', intervening);
       intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
       intervenirBtn.classList.toggle('active', intervening);
-      agentStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
-      if (intervening) agentInput.focus();
+      brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+      if (intervening) brokerInput.focus();
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'agent_control', active: intervening, sessionId: activeSessionId }));
+        ws.send(JSON.stringify({ type: 'broker_control', active: intervening, sessionId: activeSessionId }));
       }
     });
 
-    function sendAgentMessage() {
-      const text = agentInput.value.trim();
+    function sendBrokerMessage() {
+      const text = brokerInput.value.trim();
       if (!text || !activeSessionId || ws.readyState !== WebSocket.OPEN) return;
 
       clearTimeout(typingTimeout);
-      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false, sessionId: activeSessionId }));
-      ws.send(JSON.stringify({ type: 'agent_message', content: text, sessionId: activeSessionId }));
-      agentInput.value = '';
+      ws.send(JSON.stringify({ type: 'broker_typing', isTyping: false, sessionId: activeSessionId }));
+      ws.send(JSON.stringify({ type: 'broker_message', content: text, sessionId: activeSessionId }));
+      brokerInput.value = '';
     }
 
-    agentSendBtn.addEventListener('click', sendAgentMessage);
-    agentInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendAgentMessage();
+    brokerSendBtn.addEventListener('click', sendBrokerMessage);
+    brokerInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendBrokerMessage();
     });
 
-    agentInput.addEventListener('input', () => {
+    brokerInput.addEventListener('input', () => {
       if (!activeSessionId || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: 'agent_typing', isTyping: true, sessionId: activeSessionId }));
+      ws.send(JSON.stringify({ type: 'broker_typing', isTyping: true, sessionId: activeSessionId }));
       clearTimeout(typingTimeout);
       typingTimeout = setTimeout(() => {
-        ws.send(JSON.stringify({ type: 'agent_typing', isTyping: false, sessionId: activeSessionId }));
+        ws.send(JSON.stringify({ type: 'broker_typing', isTyping: false, sessionId: activeSessionId }));
       }, 1500);
     });
 

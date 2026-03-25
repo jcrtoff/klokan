@@ -14,10 +14,10 @@ Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for Rod, a
 Single `server.js` process runs both an Express HTTP server and a WebSocket server on the same port.
 
 - **`/chat`** — mobile-first client UI for end users
-- **`/agent`** — desktop dashboard for the broker (Rod)
+- **`/broker`** — desktop dashboard for the broker (Rod)
 - **`/health`** — health check endpoint
 - **`/api/version`** — returns commit SHA and uptime
-- **WebSocket flow**: clients identify as `chat` or `agent` role. User messages trigger Claude streaming responses. Agent (Rod) can send messages directly (no AI response triggered). Lead profile extraction runs async after each AI response.
+- **WebSocket flow**: clients identify as `chat` or `broker` role. User messages trigger Claude streaming responses. Broker (Rod) can send messages directly (no AI response triggered). Lead profile extraction runs async after each AI response.
 - **State**: in-memory per-session `sessions` Map (conversation history, lead profile, token/cost tracking per session). No database. Sessions auto-cleanup after 30min inactivity. Resets on restart.
 
 ## Key files
@@ -26,7 +26,7 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 |---|---|
 | `server.js` | Express + WS server, Claude streaming, lead extraction |
 | `public/chat.html` | Mobile client chat UI |
-| `public/agent.html` | Agent/broker dashboard |
+| `public/broker.html` | Broker dashboard |
 | `public/style.css` | Shared styles |
 | `scripts/deploy-local.sh` | Local dev with Doppler secrets |
 | `scripts/deploy-production.sh` | Wrapper for `infra/push-image.sh prd` |
@@ -42,7 +42,7 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | — | Claude API key |
 | `PORT` | No | `3000` | Server port |
-| `AGENT_NAME` | No | `Rod` | Broker name shown in UI and fallback messages |
+| `BROKER_NAME` | No | `Rod` | Broker name shown in UI and fallback messages |
 | `COMMIT_SHA` | No | `unknown` | Set at Docker build time via build arg |
 
 ## Local development

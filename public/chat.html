@@ -12,7 +12,7 @@
       <span class="online-dot"></span>
       <div>
         <h1>Roxanne</h1>
-        <div class="subtitle">Assistante de Rod · RodCast</div>
+        <div class="subtitle" id="subtitle">Assistante · RodCast</div>
       </div>
     </div>
 
@@ -20,7 +20,7 @@
       <div class="typing-indicator" id="typingIndicator">
         <span></span><span></span><span></span>
       </div>
-      <div class="broker-typing-indicator" id="brokerTyping">Rod est en train d'écrire…</div>
+      <div class="broker-typing-indicator" id="brokerTyping"></div>
     </div>
 
     <div class="input-bar">
@@ -36,10 +36,15 @@
     const sendBtn = document.getElementById('sendBtn');
     const typingIndicator = document.getElementById('typingIndicator');
     const brokerTyping = document.getElementById('brokerTyping');
+    const subtitleEl = document.getElementById('subtitle');
 
     let ws;
     let streamBubble = null;
     let sessionId = sessionStorage.getItem('rodcast_sessionId');
+
+    // Check for pre-assigned broker
+    const params = new URLSearchParams(location.search);
+    const targetBrokerId = params.get('broker');
 
     function connect() {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -48,6 +53,7 @@
       ws.onopen = () => {
         const identify = { type: 'identify', role: 'chat' };
         if (sessionId) identify.sessionId = sessionId;
+        if (targetBrokerId) identify.brokerId = targetBrokerId;
         ws.send(JSON.stringify(identify));
       };
 
@@ -58,6 +64,13 @@
           case 'session_assigned':
             sessionId = msg.sessionId;
             sessionStorage.setItem('rodcast_sessionId', sessionId);
+            if (msg.brokerName) {
+              subtitleEl.textContent = `Assistante de ${msg.brokerName} · RodCast`;
+              brokerTyping.textContent = `${msg.brokerName} est en train d'écrire…`;
+            } else {
+              subtitleEl.textContent = 'Assistante · RodCast';
+              brokerTyping.textContent = 'Le courtier est en train d\'écrire…';
+            }
             break;
 
           case 'message':

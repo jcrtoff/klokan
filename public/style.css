@@ -370,7 +370,7 @@ body {
 }
 
 .intervenir-btn {
-  width: 100%;
+  flex: 1;
   padding: 12px;
   background: var(--amber-50);
   color: var(--amber-600);
@@ -604,6 +604,172 @@ body {
   color: var(--text-secondary);
   line-height: 1.6;
 }
+
+/* ── Login page ──────────────────────────────────────────────── */
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-card h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.login-card label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  outline: none;
+  background: var(--bg);
+  margin-bottom: 12px;
+}
+
+.login-card input:focus { border-color: var(--teal-600); }
+
+.login-card button {
+  width: 100%;
+  padding: 12px;
+  background: var(--teal-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.login-card button:hover { background: var(--teal-800); }
+.login-card button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.login-info {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.login-error {
+  font-size: 13px;
+  color: var(--red-text);
+  background: var(--red-bg);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  margin-top: 8px;
+}
+
+.login-loading {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 8px;
+}
+
+.hidden { display: none !important; }
+
+.link-btn {
+  background: none !important;
+  color: var(--teal-600) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 4px 0 !important;
+}
+
+.link-btn:hover { text-decoration: underline; background: none !important; }
+
+/* ── Broker identity in sidebar ──────────────────────────────── */
+.broker-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.broker-identity .link-btn {
+  font-size: 11px !important;
+  margin: 0 !important;
+}
+
+/* ── Session badges ──────────────────────────────────────────── */
+.session-unassigned-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.session-assigned-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--teal-600);
+  background: var(--teal-50);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ── Claim button ────────────────────────────────────────────── */
+.broker-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.claim-btn {
+  flex: 1;
+  padding: 10px;
+  background: var(--teal-50);
+  color: var(--teal-600);
+  border: 2px solid var(--teal-600);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.claim-btn:hover {
+  background: var(--teal-600);
+  color: #fff;
+}
+
+.claim-btn.hidden { display: none; }
 
 /* ── Version tag ──────────────────────────────────────────────── */
 .version-tag {

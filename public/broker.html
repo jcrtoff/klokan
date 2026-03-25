@@ -12,6 +12,10 @@
     <div class="broker-sidebar">
       <div class="sidebar-header">
         <h2>Sessions</h2>
+        <div class="broker-identity">
+          <span id="brokerNameDisplay"></span>
+          <button id="logoutBtn" class="link-btn">Déconnexion</button>
+        </div>
       </div>
       <div class="session-list" id="sessionList">
         <div class="session-empty">Aucune session active</div>
@@ -46,7 +50,10 @@
 
       <div class="broker-bottom">
         <div class="broker-status" id="brokerStatus">IA en conversation</div>
-        <button class="intervenir-btn" id="intervenirBtn" disabled>Intervenir</button>
+        <div class="broker-actions">
+          <button class="claim-btn hidden" id="claimBtn">Prendre en charge</button>
+          <button class="intervenir-btn" id="intervenirBtn" disabled>Intervenir</button>
+        </div>
         <div class="broker-compose" id="composeBar">
           <input type="text" id="brokerInput" placeholder="Écrire au client…" autocomplete="off">
           <button id="brokerSendBtn">Envoyer</button>
@@ -101,355 +108,413 @@
   </div>
 
   <script>
-    const messagesEl = document.getElementById('messages');
-    const intervenirBtn = document.getElementById('intervenirBtn');
-    const composeBar = document.getElementById('composeBar');
-    const brokerInput = document.getElementById('brokerInput');
-    const brokerSendBtn = document.getElementById('brokerSendBtn');
-    const brokerStatus = document.getElementById('brokerStatus');
-    const connStatus = document.getElementById('connStatus');
-    const sessionListEl = document.getElementById('sessionList');
+    // ── Auth check ────────────────────────────────────────────────────────
+    const token = localStorage.getItem('rodcast_token');
+    if (!token) { window.location.href = '/broker/login'; }
 
-    let ws;
-    let intervening = false;
-    let streamBubble = null;
-    let lastCompletedBubble = null;
-    let typingTimeout = null;
-    let activeSessionId = null;
+    let currentBroker = null;
+    try { currentBroker = JSON.parse(localStorage.getItem('rodcast_broker')); } catch {}
 
-    function connect() {
-      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      ws = new WebSocket(`${proto}://${location.host}`);
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ type: 'identify', role: 'broker' }));
-        connStatus.textContent = 'Connecté';
-      };
-
-      ws.onmessage = (e) => {
-        const msg = JSON.parse(e.data);
-
-        switch (msg.type) {
-          case 'session_list':
-            renderSessionList(msg.sessions);
-            break;
-
-          case 'session_closed':
-            if (activeSessionId === msg.sessionId) {
-              clearSessionView();
-              activeSessionId = null;
-              intervenirBtn.disabled = true;
-            }
-            break;
-
-          case 'message':
-            if (msg.sessionId === activeSessionId) {
-              addBubble(msg.role, msg.content, msg.brokerName);
-            }
-            break;
-
-          case 'stream_token':
-            if (msg.sessionId === activeSessionId) {
-              if (!streamBubble) {
-                streamBubble = createBubble('ai');
-                messagesEl.appendChild(streamBubble);
-              }
-              streamBubble.textContent += msg.content;
-              scrollToBottom();
-            }
-            break;
-
-          case 'stream_done':
-            if (msg.sessionId === activeSessionId) {
-              lastCompletedBubble = streamBubble;
-              streamBubble = null;
-            } else if (msg.sessionId !== activeSessionId) {
-              // Reset stream bubble if it was for a different session
-              streamBubble = null;
-            }
-            break;
-
-          case 'stream_stats':
-            if (msg.sessionId === activeSessionId) {
-              if (lastCompletedBubble) {
-                appendBubbleStats(lastCompletedBubble, msg, false);
-                scrollToBottom();
-              }
-              updateStatsBar(msg.sessionStats);
-            }
-            break;
-
-          case 'lead_extraction_stats':
-            if (msg.sessionId === activeSessionId) {
-              if (lastCompletedBubble) {
-                appendBubbleStats(lastCompletedBubble, msg, true);
-                scrollToBottom();
-              }
-              updateStatsBar(msg.sessionStats);
-            }
-            break;
-
-          case 'session_stats':
-            if (msg.sessionId === activeSessionId) {
-              updateStatsBar(msg.stats);
-            }
-            break;
-
-          case 'lead_update':
-            if (msg.sessionId === activeSessionId) {
-              updateProfile(msg.profile);
-            }
-            break;
-
-          case 'broker_control':
-            if (msg.sessionId === activeSessionId) {
-              intervening = msg.active;
-              composeBar.classList.toggle('visible', intervening);
-              intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
-              intervenirBtn.classList.toggle('active', intervening);
-              brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
-            }
-            break;
-        }
-      };
-
-      ws.onclose = () => {
-        connStatus.textContent = 'Déconnecté';
-        setTimeout(connect, 2000);
-      };
-    }
-
-    function renderSessionList(sessionsList) {
-      if (sessionsList.length === 0) {
-        sessionListEl.innerHTML = '<div class="session-empty">Aucune session active</div>';
+    (async () => {
+      try {
+        const resp = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!resp.ok) throw new Error();
+        currentBroker = await resp.json();
+        localStorage.setItem('rodcast_broker', JSON.stringify(currentBroker));
+        document.getElementById('brokerNameDisplay').textContent = currentBroker.name;
+      } catch {
+        localStorage.removeItem('rodcast_token');
+        localStorage.removeItem('rodcast_broker');
+        window.location.href = '/broker/login';
         return;
       }
+      initApp();
+    })();
 
-      sessionListEl.innerHTML = '';
-      for (const s of sessionsList) {
-        const item = document.createElement('div');
-        item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '');
-        item.dataset.sessionId = s.id;
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('rodcast_token');
+      localStorage.removeItem('rodcast_broker');
+      window.location.href = '/broker/login';
+    });
 
-        const name = s.leadName || 'Nouveau client';
-        const score = s.leadScore ? s.leadScore.toLowerCase() : 'froid';
-        const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : score;
+    // ── App init (after auth) ─────────────────────────────────────────────
+    function initApp() {
+      const messagesEl = document.getElementById('messages');
+      const intervenirBtn = document.getElementById('intervenirBtn');
+      const claimBtn = document.getElementById('claimBtn');
+      const composeBar = document.getElementById('composeBar');
+      const brokerInput = document.getElementById('brokerInput');
+      const brokerSendBtn = document.getElementById('brokerSendBtn');
+      const brokerStatus = document.getElementById('brokerStatus');
+      const connStatus = document.getElementById('connStatus');
+      const sessionListEl = document.getElementById('sessionList');
 
-        item.innerHTML =
-          '<div class="session-item-top">' +
-            '<span class="session-score-dot ' + scoreClass + '"></span>' +
-            '<span class="session-name">' + escapeHtml(name) + '</span>' +
-          '</div>' +
-          '<div class="session-item-bottom">' +
-            '<span class="session-msg-count">' + s.messageCount + ' msg</span>' +
-            (s.brokerControlled ? '<span class="session-broker-badge">Courtier</span>' : '') +
-          '</div>';
+      let ws;
+      let intervening = false;
+      let streamBubble = null;
+      let lastCompletedBubble = null;
+      let typingTimeout = null;
+      let activeSessionId = null;
+      let activeSessionData = null; // to track assignment
 
-        item.addEventListener('click', () => selectSession(s.id));
-        sessionListEl.appendChild(item);
+      function connect() {
+        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+        ws = new WebSocket(`${proto}://${location.host}`);
+
+        ws.onopen = () => {
+          ws.send(JSON.stringify({ type: 'identify', role: 'broker', token }));
+          connStatus.textContent = 'Connecté';
+        };
+
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+
+          switch (msg.type) {
+            case 'auth_error':
+              localStorage.removeItem('rodcast_token');
+              localStorage.removeItem('rodcast_broker');
+              window.location.href = '/broker/login';
+              break;
+
+            case 'session_list':
+              renderSessionList(msg.sessions);
+              break;
+
+            case 'session_closed':
+              if (activeSessionId === msg.sessionId) {
+                clearSessionView();
+                activeSessionId = null;
+                activeSessionData = null;
+                intervenirBtn.disabled = true;
+                claimBtn.classList.add('hidden');
+              }
+              break;
+
+            case 'message':
+              if (msg.sessionId === activeSessionId) {
+                addBubble(msg.role, msg.content, msg.brokerName);
+              }
+              break;
+
+            case 'stream_token':
+              if (msg.sessionId === activeSessionId) {
+                if (!streamBubble) {
+                  streamBubble = createBubble('ai');
+                  messagesEl.appendChild(streamBubble);
+                }
+                streamBubble.textContent += msg.content;
+                scrollToBottom();
+              }
+              break;
+
+            case 'stream_done':
+              if (msg.sessionId === activeSessionId) {
+                lastCompletedBubble = streamBubble;
+                streamBubble = null;
+              } else {
+                streamBubble = null;
+              }
+              break;
+
+            case 'stream_stats':
+              if (msg.sessionId === activeSessionId) {
+                if (lastCompletedBubble) {
+                  appendBubbleStats(lastCompletedBubble, msg, false);
+                  scrollToBottom();
+                }
+                updateStatsBar(msg.sessionStats);
+              }
+              break;
+
+            case 'lead_extraction_stats':
+              if (msg.sessionId === activeSessionId) {
+                if (lastCompletedBubble) {
+                  appendBubbleStats(lastCompletedBubble, msg, true);
+                  scrollToBottom();
+                }
+                updateStatsBar(msg.sessionStats);
+              }
+              break;
+
+            case 'session_stats':
+              if (msg.sessionId === activeSessionId) {
+                updateStatsBar(msg.stats);
+              }
+              break;
+
+            case 'lead_update':
+              if (msg.sessionId === activeSessionId) {
+                updateProfile(msg.profile);
+              }
+              break;
+
+            case 'broker_control':
+              if (msg.sessionId === activeSessionId) {
+                intervening = msg.active;
+                composeBar.classList.toggle('visible', intervening);
+                intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
+                intervenirBtn.classList.toggle('active', intervening);
+                brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+              }
+              break;
+          }
+        };
+
+        ws.onclose = () => {
+          connStatus.textContent = 'Déconnecté';
+          setTimeout(connect, 2000);
+        };
       }
-    }
 
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
+      function renderSessionList(sessionsList) {
+        // Update activeSessionData if active session is in the list
+        if (activeSessionId) {
+          activeSessionData = sessionsList.find(s => s.id === activeSessionId) || activeSessionData;
+          updateClaimButton();
+        }
 
-    function selectSession(sessionId) {
-      activeSessionId = sessionId;
-      clearSessionView();
-      intervenirBtn.disabled = false;
-      intervening = false;
-      composeBar.classList.remove('visible');
-      intervenirBtn.textContent = 'Intervenir';
-      intervenirBtn.classList.remove('active');
-      brokerStatus.textContent = 'IA en conversation';
-      streamBubble = null;
-      lastCompletedBubble = null;
+        if (sessionsList.length === 0) {
+          sessionListEl.innerHTML = '<div class="session-empty">Aucune session active</div>';
+          return;
+        }
 
-      // Highlight in sidebar
-      document.querySelectorAll('.session-item').forEach(el => {
-        el.classList.toggle('active', el.dataset.sessionId === sessionId);
-      });
+        sessionListEl.innerHTML = '';
+        for (const s of sessionsList) {
+          const item = document.createElement('div');
+          item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '');
+          item.dataset.sessionId = s.id;
 
-      // Request full session state from server
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'select_session', sessionId }));
-      }
-    }
+          const name = s.leadName || 'Nouveau client';
+          const score = s.leadScore ? s.leadScore.toLowerCase() : 'froid';
+          const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : score;
 
-    function clearSessionView() {
-      messagesEl.innerHTML = '';
-      resetProfile();
-      resetStatsBar();
-    }
+          let badge = '';
+          if (s.controlledByBrokerId) {
+            badge = '<span class="session-broker-badge">Courtier</span>';
+          } else if (!s.assignedBrokerId) {
+            badge = '<span class="session-unassigned-badge">Non assigné</span>';
+          } else if (s.assignedBrokerName) {
+            badge = '<span class="session-assigned-badge">' + escapeHtml(s.assignedBrokerName) + '</span>';
+          }
 
-    function resetProfile() {
-      document.getElementById('leadName').textContent = 'Client inconnu';
-      document.getElementById('avatar').textContent = '—';
-      document.getElementById('avatar').classList.remove('populated');
-      document.getElementById('leadContact').textContent = '—';
-      document.getElementById('scoreBadge').textContent = 'FROID';
-      document.getElementById('scoreBadge').className = 'score-badge froid';
-      document.getElementById('notesValue').textContent = 'Aucune note pour le moment.';
+          item.innerHTML =
+            '<div class="session-item-top">' +
+              '<span class="session-score-dot ' + scoreClass + '"></span>' +
+              '<span class="session-name">' + escapeHtml(name) + '</span>' +
+            '</div>' +
+            '<div class="session-item-bottom">' +
+              '<span class="session-msg-count">' + s.messageCount + ' msg</span>' +
+              badge +
+            '</div>';
 
-      const fields = ['qProjectType', 'qBudget', 'qNeighbourhood', 'qPropertyType', 'qTimeline', 'qPreApproval'];
-      for (const id of fields) {
-        const el = document.getElementById(id);
-        el.textContent = '—';
-        el.classList.remove('populated');
-      }
-    }
-
-    function resetStatsBar() {
-      document.getElementById('statTotalTokens').textContent = '0';
-      document.getElementById('statTotalCost').textContent = '$0.0000';
-      document.getElementById('statAvgTime').textContent = '—';
-    }
-
-    function createBubble(role) {
-      const div = document.createElement('div');
-      div.className = `bubble ${role}`;
-      return div;
-    }
-
-    function addBubble(role, content, brokerName) {
-      const div = createBubble(role);
-      if (role === 'broker' && brokerName) {
-        const label = document.createElement('div');
-        label.className = 'broker-label';
-        label.textContent = brokerName;
-        div.appendChild(label);
-      }
-      const text = document.createTextNode(content);
-      div.appendChild(text);
-      messagesEl.appendChild(div);
-      scrollToBottom();
-    }
-
-    function scrollToBottom() {
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    function updateProfile(p) {
-      if (p.name && p.name !== 'null') {
-        document.getElementById('leadName').textContent = p.name;
-        const initials = p.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-        document.getElementById('avatar').textContent = initials;
-        document.getElementById('avatar').classList.add('populated');
-      }
-
-      const contactParts = [];
-      if (p.email && p.email !== 'null') contactParts.push(p.email);
-      if (p.phone && p.phone !== 'null') contactParts.push(p.phone);
-      if (contactParts.length > 0) {
-        document.getElementById('leadContact').textContent = contactParts.join(' · ');
-      }
-
-      const fields = {
-        qProjectType: p.projectType,
-        qBudget: p.budget,
-        qNeighbourhood: p.neighbourhood,
-        qPropertyType: p.propertyType,
-        qTimeline: p.timeline,
-        qPreApproval: p.preApproval
-      };
-
-      for (const [id, val] of Object.entries(fields)) {
-        const el = document.getElementById(id);
-        if (val && val !== 'null') {
-          el.textContent = val;
-          el.classList.add('populated');
+          item.addEventListener('click', () => selectSession(s.id, s));
+          sessionListEl.appendChild(item);
         }
       }
 
-      const badge = document.getElementById('scoreBadge');
-      if (p.leadScore && p.leadScore !== 'null') {
-        const score = p.leadScore.toLowerCase();
-        badge.textContent = score.toUpperCase();
-        badge.className = 'score-badge';
-        if (score === 'froid') badge.classList.add('froid');
-        else if (score === 'tiède' || score === 'tiede') badge.classList.add('tiede');
-        else if (score === 'chaud') badge.classList.add('chaud');
+      function updateClaimButton() {
+        if (!activeSessionData) {
+          claimBtn.classList.add('hidden');
+          return;
+        }
+        // Show claim button if session is unassigned
+        if (!activeSessionData.assignedBrokerId) {
+          claimBtn.classList.remove('hidden');
+        } else {
+          claimBtn.classList.add('hidden');
+        }
       }
 
-      if (p.notes && p.notes !== 'null') {
-        document.getElementById('notesValue').textContent = p.notes;
-      }
-    }
-
-    function updateStatsBar(stats) {
-      const totalTokens = stats.totalInputTokens + stats.totalOutputTokens;
-      document.getElementById('statTotalTokens').textContent = totalTokens.toLocaleString();
-      document.getElementById('statTotalCost').textContent = '$' + stats.totalCost.toFixed(4);
-      if (stats.responseCount > 0) {
-        const avg = Math.round(stats.totalResponseTime / stats.responseCount);
-        document.getElementById('statAvgTime').textContent = avg.toLocaleString() + 'ms';
-      }
-    }
-
-    function appendBubbleStats(bubble, data, isExtraction) {
-      let statsDiv = bubble.querySelector('.bubble-stats');
-      if (!statsDiv) {
-        statsDiv = document.createElement('div');
-        statsDiv.className = 'bubble-stats';
-        bubble.appendChild(statsDiv);
+      function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
       }
 
-      const line = document.createElement('div');
-      line.className = 'stats-line';
-      if (isExtraction) {
-        line.textContent = `  + extraction: ${data.inputTokens.toLocaleString()} in / ${data.outputTokens.toLocaleString()} out · $${data.cost.toFixed(4)} · ${data.responseTime.toLocaleString()}ms`;
-      } else {
-        line.textContent = `↳ ${data.inputTokens.toLocaleString()} in / ${data.outputTokens.toLocaleString()} out · $${data.cost.toFixed(4)} · ${data.responseTime.toLocaleString()}ms`;
+      function selectSession(sessionId, sessionData) {
+        activeSessionId = sessionId;
+        activeSessionData = sessionData || null;
+        clearSessionView();
+        intervenirBtn.disabled = false;
+        intervening = false;
+        composeBar.classList.remove('visible');
+        intervenirBtn.textContent = 'Intervenir';
+        intervenirBtn.classList.remove('active');
+        brokerStatus.textContent = 'IA en conversation';
+        streamBubble = null;
+        lastCompletedBubble = null;
+        updateClaimButton();
+
+        document.querySelectorAll('.session-item').forEach(el => {
+          el.classList.toggle('active', el.dataset.sessionId === sessionId);
+        });
+
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'select_session', sessionId }));
+        }
       }
-      statsDiv.appendChild(line);
-    }
 
-    // Intervenir toggle
-    intervenirBtn.addEventListener('click', () => {
-      if (!activeSessionId) return;
-      intervening = !intervening;
-      composeBar.classList.toggle('visible', intervening);
-      intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
-      intervenirBtn.classList.toggle('active', intervening);
-      brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
-      if (intervening) brokerInput.focus();
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'broker_control', active: intervening, sessionId: activeSessionId }));
+      claimBtn.addEventListener('click', () => {
+        if (!activeSessionId || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify({ type: 'broker_claim', sessionId: activeSessionId }));
+        claimBtn.classList.add('hidden');
+      });
+
+      function clearSessionView() {
+        messagesEl.innerHTML = '';
+        resetProfile();
+        resetStatsBar();
       }
-    });
 
-    function sendBrokerMessage() {
-      const text = brokerInput.value.trim();
-      if (!text || !activeSessionId || ws.readyState !== WebSocket.OPEN) return;
+      function resetProfile() {
+        document.getElementById('leadName').textContent = 'Client inconnu';
+        document.getElementById('avatar').textContent = '—';
+        document.getElementById('avatar').classList.remove('populated');
+        document.getElementById('leadContact').textContent = '—';
+        document.getElementById('scoreBadge').textContent = 'FROID';
+        document.getElementById('scoreBadge').className = 'score-badge froid';
+        document.getElementById('notesValue').textContent = 'Aucune note pour le moment.';
+        const fields = ['qProjectType', 'qBudget', 'qNeighbourhood', 'qPropertyType', 'qTimeline', 'qPreApproval'];
+        for (const id of fields) {
+          const el = document.getElementById(id);
+          el.textContent = '—';
+          el.classList.remove('populated');
+        }
+      }
 
-      clearTimeout(typingTimeout);
-      ws.send(JSON.stringify({ type: 'broker_typing', isTyping: false, sessionId: activeSessionId }));
-      ws.send(JSON.stringify({ type: 'broker_message', content: text, sessionId: activeSessionId }));
-      brokerInput.value = '';
-    }
+      function resetStatsBar() {
+        document.getElementById('statTotalTokens').textContent = '0';
+        document.getElementById('statTotalCost').textContent = '$0.0000';
+        document.getElementById('statAvgTime').textContent = '—';
+      }
 
-    brokerSendBtn.addEventListener('click', sendBrokerMessage);
-    brokerInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendBrokerMessage();
-    });
+      function createBubble(role) {
+        const div = document.createElement('div');
+        div.className = `bubble ${role}`;
+        return div;
+      }
 
-    brokerInput.addEventListener('input', () => {
-      if (!activeSessionId || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: 'broker_typing', isTyping: true, sessionId: activeSessionId }));
-      clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
+      function addBubble(role, content, brokerName) {
+        const div = createBubble(role);
+        if (role === 'broker' && brokerName) {
+          const label = document.createElement('div');
+          label.className = 'broker-label';
+          label.textContent = brokerName;
+          div.appendChild(label);
+        }
+        const text = document.createTextNode(content);
+        div.appendChild(text);
+        messagesEl.appendChild(div);
+        scrollToBottom();
+      }
+
+      function scrollToBottom() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      function updateProfile(p) {
+        if (p.name && p.name !== 'null') {
+          document.getElementById('leadName').textContent = p.name;
+          const initials = p.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+          document.getElementById('avatar').textContent = initials;
+          document.getElementById('avatar').classList.add('populated');
+        }
+        const contactParts = [];
+        if (p.email && p.email !== 'null') contactParts.push(p.email);
+        if (p.phone && p.phone !== 'null') contactParts.push(p.phone);
+        if (contactParts.length > 0) {
+          document.getElementById('leadContact').textContent = contactParts.join(' · ');
+        }
+        const fields = {
+          qProjectType: p.projectType, qBudget: p.budget, qNeighbourhood: p.neighbourhood,
+          qPropertyType: p.propertyType, qTimeline: p.timeline, qPreApproval: p.preApproval
+        };
+        for (const [id, val] of Object.entries(fields)) {
+          const el = document.getElementById(id);
+          if (val && val !== 'null') { el.textContent = val; el.classList.add('populated'); }
+        }
+        const badge = document.getElementById('scoreBadge');
+        if (p.leadScore && p.leadScore !== 'null') {
+          const score = p.leadScore.toLowerCase();
+          badge.textContent = score.toUpperCase();
+          badge.className = 'score-badge';
+          if (score === 'froid') badge.classList.add('froid');
+          else if (score === 'tiède' || score === 'tiede') badge.classList.add('tiede');
+          else if (score === 'chaud') badge.classList.add('chaud');
+        }
+        if (p.notes && p.notes !== 'null') {
+          document.getElementById('notesValue').textContent = p.notes;
+        }
+      }
+
+      function updateStatsBar(stats) {
+        const totalTokens = stats.totalInputTokens + stats.totalOutputTokens;
+        document.getElementById('statTotalTokens').textContent = totalTokens.toLocaleString();
+        document.getElementById('statTotalCost').textContent = '$' + stats.totalCost.toFixed(4);
+        if (stats.responseCount > 0) {
+          const avg = Math.round(stats.totalResponseTime / stats.responseCount);
+          document.getElementById('statAvgTime').textContent = avg.toLocaleString() + 'ms';
+        }
+      }
+
+      function appendBubbleStats(bubble, data, isExtraction) {
+        let statsDiv = bubble.querySelector('.bubble-stats');
+        if (!statsDiv) {
+          statsDiv = document.createElement('div');
+          statsDiv.className = 'bubble-stats';
+          bubble.appendChild(statsDiv);
+        }
+        const line = document.createElement('div');
+        line.className = 'stats-line';
+        if (isExtraction) {
+          line.textContent = `  + extraction: ${data.inputTokens.toLocaleString()} in / ${data.outputTokens.toLocaleString()} out · $${data.cost.toFixed(4)} · ${data.responseTime.toLocaleString()}ms`;
+        } else {
+          line.textContent = `↳ ${data.inputTokens.toLocaleString()} in / ${data.outputTokens.toLocaleString()} out · $${data.cost.toFixed(4)} · ${data.responseTime.toLocaleString()}ms`;
+        }
+        statsDiv.appendChild(line);
+      }
+
+      // Intervenir toggle
+      intervenirBtn.addEventListener('click', () => {
+        if (!activeSessionId) return;
+        intervening = !intervening;
+        composeBar.classList.toggle('visible', intervening);
+        intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
+        intervenirBtn.classList.toggle('active', intervening);
+        brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+        if (intervening) brokerInput.focus();
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'broker_control', active: intervening, sessionId: activeSessionId }));
+        }
+      });
+
+      function sendBrokerMessage() {
+        const text = brokerInput.value.trim();
+        if (!text || !activeSessionId || ws.readyState !== WebSocket.OPEN) return;
+        clearTimeout(typingTimeout);
         ws.send(JSON.stringify({ type: 'broker_typing', isTyping: false, sessionId: activeSessionId }));
-      }, 1500);
-    });
+        ws.send(JSON.stringify({ type: 'broker_message', content: text, sessionId: activeSessionId }));
+        brokerInput.value = '';
+      }
 
-    connect();
+      brokerSendBtn.addEventListener('click', sendBrokerMessage);
+      brokerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendBrokerMessage(); });
 
-    fetch('/api/version').then(r => r.json()).then(d => {
-      document.getElementById('versionTag').textContent = d.sha;
-    }).catch(() => {});
+      brokerInput.addEventListener('input', () => {
+        if (!activeSessionId || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify({ type: 'broker_typing', isTyping: true, sessionId: activeSessionId }));
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          ws.send(JSON.stringify({ type: 'broker_typing', isTyping: false, sessionId: activeSessionId }));
+        }, 1500);
+      });
+
+      connect();
+
+      fetch('/api/version').then(r => r.json()).then(d => {
+        document.getElementById('versionTag').textContent = d.sha;
+      }).catch(() => {});
+    }
   </script>
 </body>
 </html>

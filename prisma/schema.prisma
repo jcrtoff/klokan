@@ -1,0 +1,69 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Broker {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  role      String    @default("broker") // "broker" | "manager"
+  createdAt DateTime  @default(now()) @map("created_at")
+  lastLogin DateTime? @map("last_login")
+
+  assignedSessions   Session[] @relation("AssignedBroker")
+  controlledSessions Session[] @relation("ControllingBroker")
+  messages           Message[]
+
+  @@map("brokers")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String // bcrypt hash
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("otp_codes")
+}
+
+model Session {
+  id                   String   @id @default(uuid())
+  assignedBrokerId     String?  @map("assigned_broker_id")
+  assignedBroker       Broker?  @relation("AssignedBroker", fields: [assignedBrokerId], references: [id])
+  controlledByBrokerId String?  @map("controlled_by_broker_id")
+  controlledByBroker   Broker?  @relation("ControllingBroker", fields: [controlledByBrokerId], references: [id])
+  leadProfile          Json     @default("{}") @map("lead_profile")
+  totalInputTokens     Int      @default(0) @map("total_input_tokens")
+  totalOutputTokens    Int      @default(0) @map("total_output_tokens")
+  totalCost            Float    @default(0) @map("total_cost")
+  responseCount        Int      @default(0) @map("response_count")
+  totalResponseTime    Int      @default(0) @map("total_response_time")
+  createdAt            DateTime @default(now()) @map("created_at")
+  lastActivity         DateTime @default(now()) @map("last_activity")
+
+  messages Message[]
+
+  @@map("sessions")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String // "user" | "assistant" | "broker"
+  content   String
+  brokerId  String?  @map("broker_id")
+  broker    Broker?  @relation(fields: [brokerId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([sessionId])
+  @@map("messages")
+}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — RodCast</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>RodCast</h1>
+      <p class="login-subtitle">Connexion courtier</p>
+
+      <div id="stepEmail">
+        <label for="emailInput">Courriel</label>
+        <input type="email" id="emailInput" placeholder="votre@courriel.com" autocomplete="email">
+        <button id="requestCodeBtn">Envoyer le code</button>
+      </div>
+
+      <div id="stepCode" class="hidden">
+        <p class="login-info">Un code à 6 chiffres a été envoyé à <strong id="emailDisplay"></strong></p>
+        <label for="codeInput">Code de vérification</label>
+        <input type="text" id="codeInput" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        <button id="verifyBtn">Vérifier</button>
+        <button id="backBtn" class="link-btn">Changer de courriel</button>
+      </div>
+
+      <div id="errorMsg" class="login-error hidden"></div>
+      <div id="loadingMsg" class="login-loading hidden">Chargement…</div>
+    </div>
+  </div>
+
+  <script>
+    const emailInput = document.getElementById('emailInput');
+    const codeInput = document.getElementById('codeInput');
+    const requestCodeBtn = document.getElementById('requestCodeBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const backBtn = document.getElementById('backBtn');
+    const stepEmail = document.getElementById('stepEmail');
+    const stepCode = document.getElementById('stepCode');
+    const emailDisplay = document.getElementById('emailDisplay');
+    const errorMsg = document.getElementById('errorMsg');
+    const loadingMsg = document.getElementById('loadingMsg');
+
+    let currentEmail = '';
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.remove('hidden');
+      loadingMsg.classList.add('hidden');
+    }
+
+    function clearError() {
+      errorMsg.classList.add('hidden');
+    }
+
+    function setLoading(on) {
+      if (on) {
+        loadingMsg.classList.remove('hidden');
+        requestCodeBtn.disabled = true;
+        verifyBtn.disabled = true;
+      } else {
+        loadingMsg.classList.add('hidden');
+        requestCodeBtn.disabled = false;
+        verifyBtn.disabled = false;
+      }
+    }
+
+    async function requestCode() {
+      clearError();
+      const email = emailInput.value.trim();
+      if (!email || !email.includes('@')) {
+        showError('Veuillez entrer un courriel valide.');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const resp = await fetch('/api/auth/request-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          showError(data.error || 'Erreur lors de l\'envoi du code.');
+          return;
+        }
+
+        currentEmail = email;
+        emailDisplay.textContent = email;
+        stepEmail.classList.add('hidden');
+        stepCode.classList.remove('hidden');
+        codeInput.focus();
+      } catch {
+        showError('Erreur de connexion au serveur.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function verify() {
+      clearError();
+      const code = codeInput.value.trim();
+      if (!code || code.length !== 6) {
+        showError('Veuillez entrer le code à 6 chiffres.');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const resp = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: currentEmail, code })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          showError(data.error || 'Code invalide.');
+          return;
+        }
+
+        localStorage.setItem('rodcast_token', data.token);
+        localStorage.setItem('rodcast_broker', JSON.stringify(data.broker));
+        window.location.href = '/broker';
+      } catch {
+        showError('Erreur de connexion au serveur.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    requestCodeBtn.addEventListener('click', requestCode);
+    emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') requestCode(); });
+
+    verifyBtn.addEventListener('click', verify);
+    codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') verify(); });
+
+    backBtn.addEventListener('click', () => {
+      clearError();
+      codeInput.value = '';
+      stepCode.classList.add('hidden');
+      stepEmail.classList.remove('hidden');
+      emailInput.focus();
+    });
+
+    // If already logged in, redirect
+    const token = localStorage.getItem('rodcast_token');
+    if (token) {
+      fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(r => { if (r.ok) window.location.href = '/broker'; })
+        .catch(() => {});
+    }
+  </script>
+</body>
+</html>

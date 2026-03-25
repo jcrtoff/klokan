@@ -1,49 +1,66 @@
 # RodCast
 
-Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for Rod, a Montreal real estate broker (OACIQ). Bilingual French/English.
+Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for brokers. Multi-broker support with passwordless auth. Bilingual French/English.
 
 ## Tech stack
 
 - **Runtime**: Node.js 20, Express 4, WebSocket (`ws`)
 - **AI**: Anthropic Claude API (`@anthropic-ai/sdk`), chat model `claude-sonnet-4-6`, extraction model `claude-haiku-4-5-20251001`
+- **DB**: PostgreSQL 16 via Prisma ORM
+- **Auth**: Passwordless OTP via Brevo email, JWT sessions
 - **Frontend**: Vanilla HTML/CSS/JS (no build step)
 - **Infra**: Docker, AWS ECR, CloudFormation/SAM
 
 ## Architecture
 
-Single `server.js` process runs both an Express HTTP server and a WebSocket server on the same port.
+Single `server.js` process runs both an Express HTTP server and a WebSocket server on the same port. Code is organized into `lib/` modules.
 
-- **`/chat`** — mobile-first client UI for end users
-- **`/broker`** — desktop dashboard for the broker (Rod)
+- **`/chat`** — mobile-first client UI for end users. Supports `?broker=<id>` for pre-assignment.
+- **`/broker`** — desktop dashboard for brokers (courtiers). Requires auth.
+- **`/broker/login`** — passwordless login page (email → OTP code → JWT)
 - **`/health`** — health check endpoint
-- **`/api/version`** — returns commit SHA and uptime
-- **WebSocket flow**: clients identify as `chat` or `broker` role. User messages trigger Claude streaming responses. Broker (Rod) can send messages directly (no AI response triggered). Lead profile extraction runs async after each AI response.
-- **State**: in-memory per-session `sessions` Map (conversation history, lead profile, token/cost tracking per session). No database. Sessions auto-cleanup after 30min inactivity. Resets on restart.
+- **`/api/version`** — returns commit SHA
+- **`/api/auth/*`** — auth endpoints (request-code, verify, me)
+- **WebSocket flow**: clients identify as `chat` or `broker` role. Broker connections require JWT. User messages trigger Claude streaming responses. Brokers can send messages directly (no AI response triggered). Lead profile extraction runs async after each AI response.
+- **State**: PostgreSQL for persistent data (brokers, sessions, messages, OTP codes). In-memory Map as hot cache for active sessions (WS connections, streaming state). Sessions loaded from DB on demand.
+- **Visibility**: Role-based — brokers see only their assigned sessions + unassigned. Managers see all.
+- **Session assignment**: Pre-assigned via `/chat?broker=<id>`, or broker claims from queue ("Prendre en charge").
 
 ## Key files
 
 | File | Purpose |
 |---|---|
-| `server.js` | Express + WS server, Claude streaming, lead extraction |
+| `server.js` | Express + WS server bootstrap (slim orchestrator) |
+| `lib/db.js` | Prisma client initialization |
+| `lib/auth.js` | OTP generation/verification, JWT, Brevo email |
+| `lib/routes.js` | Express route handlers (auth + static) |
+| `lib/sessions.js` | Session CRUD, in-memory cache + DB sync |
+| `lib/websocket.js` | WS message handling, filtered broadcast |
+| `lib/claude.js` | Claude streaming, lead extraction, system prompt |
+| `prisma/schema.prisma` | Database schema |
 | `public/chat.html` | Mobile client chat UI |
 | `public/broker.html` | Broker dashboard |
+| `public/login.html` | Passwordless login page |
 | `public/style.css` | Shared styles |
-| `scripts/deploy-local.sh` | Local dev with Doppler secrets |
+| `scripts/deploy-local.sh` | Local dev with Doppler + Docker PostgreSQL |
 | `scripts/deploy-production.sh` | Wrapper for `infra/push-image.sh prd` |
-| `infra/template.yaml` | CloudFormation — ECR repos (scan on push, keep last 10 images) |
-| `infra/deploy.sh` | Create/update CloudFormation stacks |
-| `infra/push-image.sh` | Build Docker image (linux/amd64), push to ECR, trigger cluster deploy for prd |
-| `scripts/trigger_cluster_deploy.sh` | Triggers deploy webhook on cluster |
-| `Dockerfile` | Node 20 Alpine, non-root user, healthcheck |
+| `infra/template.yaml` | CloudFormation — ECR repos |
+| `infra/push-image.sh` | Build Docker image, push to ECR |
+| `Dockerfile` | Node 20 Alpine, Prisma migrate on start |
 
 ## Environment variables
 
 | Variable | Required | Default | Notes |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | — | Claude API key |
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `JWT_SECRET` | Prod | random bytes | JWT signing secret |
+| `BREVO_API_KEY` | Prod | — | Brevo SMTP API key. Unset = OTP logged to console |
+| `BREVO_SENDER_EMAIL` | No | `noreply@rodcast.ca` | Email sender address |
+| `BREVO_SENDER_NAME` | No | `RodCast` | Email sender display name |
+| `DEFAULT_BROKER_NAME` | No | `Rod` | Name in system prompt for unassigned sessions |
 | `PORT` | No | `3000` | Server port |
-| `BROKER_NAME` | No | `Rod` | Broker name shown in UI and fallback messages |
-| `COMMIT_SHA` | No | `unknown` | Set at Docker build time via build arg |
+| `COMMIT_SHA` | No | `dev` | Set at Docker build time |
 
 ## Local development
 
@@ -51,12 +68,14 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 # With Doppler (recommended):
 ./scripts/deploy-local.sh
 
-# Or manually with .env:
-cp .env.example .env  # fill in ANTHROPIC_API_KEY
+# Or manually:
+docker start rodcast-postgres  # or create with deploy-local.sh first
+cp .env.example .env           # fill in ANTHROPIC_API_KEY
+npx prisma migrate deploy
 npm run dev
 ```
 
-`deploy-local.sh` kills port 3000 if occupied, then runs `doppler run -- npm run dev` (which uses `node --watch`).
+`deploy-local.sh` ensures PostgreSQL is running (Docker on port 37804), runs migrations, then starts the app via Doppler.
 
 ## Deployment
 
@@ -72,8 +91,8 @@ npm run dev
 ```
 
 - Docker image built for `linux/amd64` with git SHA as build arg
-- ECR repos: `rodcast-dev`, `rodcast-prd`
-- For `prd`: triggers deploy webhook at `cluster.toffsystems.com` using token from `.cluster_api_token` (project root)
+- Prisma migrations run automatically on container start
+- `DATABASE_URL`, `JWT_SECRET`, `BREVO_API_KEY` injected via Doppler at runtime
 
 ## Conventions
 

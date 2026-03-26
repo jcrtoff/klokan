@@ -119,6 +119,20 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* ── Connection banner ───────────────────────────────────────── */
+.connection-banner {
+  display: none;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 6px 20px;
+  background: var(--amber-50);
+  border-bottom: 1px solid rgba(133,79,11,0.15);
+  flex-shrink: 0;
+}
+
+.connection-banner.visible { display: block; }
+
 /* ── Typing indicator ────────────────────────────────────────── */
 .typing-indicator {
   display: none;

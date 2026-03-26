@@ -23,9 +23,10 @@
       <div class="broker-typing-indicator" id="brokerTyping"></div>
     </div>
 
+    <div class="connection-banner visible" id="connectionBanner">Connexion en cours…</div>
     <div class="input-bar">
       <input type="text" id="msgInput" placeholder="Écrire un message…" autocomplete="off">
-      <button id="sendBtn">Envoyer</button>
+      <button id="sendBtn" disabled>Envoyer</button>
     </div>
     <div class="version-tag" id="versionTag"></div>
   </div>
@@ -41,20 +42,35 @@
     let ws;
     let streamBubble = null;
     let sessionId = sessionStorage.getItem('rodcast_sessionId');
+    let connectAttempts = 0;
+    const MAX_RETRY_ATTEMPTS = 5;
+
+    const connectionBanner = document.getElementById('connectionBanner');
 
     // Check for pre-assigned broker
     const params = new URLSearchParams(location.search);
     const targetBrokerId = params.get('broker');
+
+    function setConnected(connected) {
+      sendBtn.disabled = !connected;
+      connectionBanner.classList.toggle('visible', !connected);
+    }
 
     function connect() {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
       ws = new WebSocket(`${proto}://${location.host}`);
 
       ws.onopen = () => {
+        connectAttempts = 0;
+        setConnected(true);
         const identify = { type: 'identify', role: 'chat' };
         if (sessionId) identify.sessionId = sessionId;
         if (targetBrokerId) identify.brokerId = targetBrokerId;
         ws.send(JSON.stringify(identify));
+      };
+
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
       };
 
       ws.onmessage = (e) => {
@@ -99,6 +115,13 @@
       };
 
       ws.onclose = () => {
+        setConnected(false);
+        connectAttempts++;
+        if (connectAttempts >= MAX_RETRY_ATTEMPTS) {
+          connectionBanner.textContent = 'Impossible de se connecter. Veuillez rafraîchir la page.';
+          return;
+        }
+        connectionBanner.textContent = 'Reconnexion…';
         setTimeout(connect, 2000);
       };
     }

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — RodCast</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .admin-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .admin-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .admin-header h1 { font-size: 22px; font-weight: 700; }
+    .admin-section { margin-bottom: 40px; }
+    .admin-section h2 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      font-size: 14px;
+    }
+    .admin-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .admin-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table .muted { color: var(--text-secondary); font-size: 13px; }
+    .admin-table .revoke-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--red-text);
+      cursor: pointer;
+    }
+    .admin-table .revoke-btn:hover { background: var(--red-bg); }
+    .admin-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .admin-form .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+    .admin-form label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .admin-form input {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: var(--bg);
+    }
+    .admin-form input:focus { border-color: var(--teal-600); outline: none; }
+    .admin-form button {
+      padding: 9px 18px;
+      background: var(--teal-600);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .admin-form button:hover { background: var(--teal-800); }
+    .admin-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .form-error { font-size: 13px; color: var(--red-text); margin-top: 8px; }
+    .badge-authorized {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: var(--teal-50);
+      color: var(--teal-800);
+    }
+    .badge-revoked {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: var(--red-bg);
+      color: var(--red-text);
+    }
+    .empty-row td { color: var(--text-secondary); font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1>RodCast — Admin</h1>
+      <button id="logoutBtn" class="link-btn">Déconnexion</button>
+    </div>
+
+    <div class="admin-section">
+      <h2>Gestionnaires</h2>
+      <table class="admin-table" id="managersTable">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Courriel</th>
+            <th>Statut</th>
+            <th>Dernière connexion</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="managersBody">
+          <tr class="empty-row"><td colspan="5">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="admin-section">
+      <h2>Ajouter un gestionnaire</h2>
+      <form class="admin-form" id="addManagerForm" autocomplete="off">
+        <div class="field">
+          <label for="mgEmail">Courriel</label>
+          <input type="email" id="mgEmail" placeholder="gestionnaire@example.com" required>
+        </div>
+        <div class="field">
+          <label for="mgName">Nom</label>
+          <input type="text" id="mgName" placeholder="Prénom Nom" required>
+        </div>
+        <button type="submit" id="addBtn">Ajouter</button>
+      </form>
+      <div class="form-error hidden" id="formError"></div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('rodcast_token');
+    if (!token) { window.location.href = '/broker/login'; }
+
+    // Verify token and role
+    (async () => {
+      try {
+        const resp = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!resp.ok) throw new Error();
+        const broker = await resp.json();
+        if (broker.role !== 'admin') {
+          window.location.href = '/broker';
+          return;
+        }
+      } catch {
+        localStorage.removeItem('rodcast_token');
+        localStorage.removeItem('rodcast_broker');
+        window.location.href = '/broker/login';
+        return;
+      }
+      loadManagers();
+    })();
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('rodcast_token');
+      localStorage.removeItem('rodcast_broker');
+      window.location.href = '/broker/login';
+    });
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    async function loadManagers() {
+      try {
+        const resp = await fetch('/api/admin/managers', { headers: { 'Authorization': `Bearer ${token}` } });
+        const managers = await resp.json();
+        renderManagers(managers);
+      } catch {
+        document.getElementById('managersBody').innerHTML =
+          '<tr class="empty-row"><td colspan="5">Erreur de chargement.</td></tr>';
+      }
+    }
+
+    function renderManagers(managers) {
+      const tbody = document.getElementById('managersBody');
+      if (managers.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Aucun gestionnaire.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = managers.map(m => `
+        <tr data-id="${m.id}">
+          <td>${escapeHtml(m.name)}</td>
+          <td class="muted">${escapeHtml(m.email)}</td>
+          <td>${m.authorized ? '<span class="badge-authorized">Actif</span>' : '<span class="badge-revoked">Révoqué</span>'}</td>
+          <td class="muted">${formatDate(m.lastLogin)}</td>
+          <td>${m.authorized ? `<button class="revoke-btn" data-id="${m.id}">Révoquer</button>` : ''}</td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('.revoke-btn').forEach(btn => {
+        btn.addEventListener('click', () => revokeManager(btn.dataset.id));
+      });
+    }
+
+    async function revokeManager(id) {
+      if (!confirm('Révoquer l\'accès de ce gestionnaire ?')) return;
+      try {
+        await fetch(`/api/admin/managers/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadManagers();
+      } catch {
+        alert('Erreur lors de la révocation.');
+      }
+    }
+
+    document.getElementById('addManagerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('formError');
+      errorEl.classList.add('hidden');
+      const email = document.getElementById('mgEmail').value.trim();
+      const name = document.getElementById('mgName').value.trim();
+      const addBtn = document.getElementById('addBtn');
+      addBtn.disabled = true;
+      try {
+        const resp = await fetch('/api/admin/managers', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          errorEl.textContent = data.error || 'Erreur.';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        document.getElementById('mgEmail').value = '';
+        document.getElementById('mgName').value = '';
+        loadManagers();
+      } catch {
+        errorEl.textContent = 'Erreur de connexion.';
+        errorEl.classList.remove('hidden');
+      } finally {
+        addBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

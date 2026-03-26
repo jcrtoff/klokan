@@ -794,3 +794,124 @@ body {
   opacity: 0.5;
   font-family: monospace;
 }
+
+/* ── Sidebar tabs (manager) ───────────────────────────────────── */
+.sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-tab {
+  flex: 1;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.sidebar-tab.active {
+  color: var(--teal-600);
+  border-bottom-color: var(--teal-600);
+}
+
+/* ── Team panel ───────────────────────────────────────────────── */
+.team-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.team-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.team-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.team-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.team-item-name { font-weight: 500; }
+.team-item-email { font-size: 12px; color: var(--text-secondary); }
+
+.team-revoke-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--red-text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.team-revoke-btn:hover { background: var(--red-bg); }
+
+.team-revoked {
+  font-size: 11px;
+  color: var(--red-text);
+  opacity: 0.7;
+}
+
+.team-form {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.team-form-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.team-form input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  background: var(--bg);
+}
+
+.team-form input:focus { border-color: var(--teal-600); outline: none; }
+
+.team-form button {
+  padding: 8px;
+  background: var(--teal-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.team-form button:hover { background: var(--teal-800); }
+
+.team-form-error {
+  font-size: 12px;
+  color: var(--red-text);
+}

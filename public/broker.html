@@ -11,14 +11,28 @@
     <!-- Left pane: session sidebar -->
     <div class="broker-sidebar">
       <div class="sidebar-header">
-        <h2>Sessions</h2>
+        <h2 id="sidebarTitle">Sessions</h2>
         <div class="broker-identity">
           <span id="brokerNameDisplay"></span>
           <button id="logoutBtn" class="link-btn">Déconnexion</button>
         </div>
       </div>
+      <div class="sidebar-tabs hidden" id="sidebarTabs">
+        <button class="sidebar-tab active" data-tab="sessions">Sessions</button>
+        <button class="sidebar-tab" data-tab="team">Mon équipe</button>
+      </div>
       <div class="session-list" id="sessionList">
         <div class="session-empty">Aucune session active</div>
+      </div>
+      <div class="team-panel hidden" id="teamPanel">
+        <div class="team-list" id="teamList"></div>
+        <form class="team-form" id="addBrokerForm">
+          <div class="team-form-title">Ajouter un courtier</div>
+          <input type="email" id="brokerEmail" placeholder="courriel@example.com">
+          <input type="text" id="brokerName" placeholder="Prénom Nom">
+          <button type="submit">Ajouter</button>
+          <div class="team-form-error hidden" id="teamFormError"></div>
+        </form>
       </div>
     </div>
 
@@ -510,6 +524,83 @@
       });
 
       connect();
+
+      // ── Manager team tab ──────────────────────────────────────────────────
+      if (currentBroker?.role === 'manager') {
+        document.getElementById('sidebarTabs').classList.remove('hidden');
+
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const isTeam = tab.dataset.tab === 'team';
+            document.getElementById('sessionList').classList.toggle('hidden', isTeam);
+            document.getElementById('teamPanel').classList.toggle('hidden', !isTeam);
+            if (isTeam) loadTeam();
+          });
+        });
+
+        document.getElementById('addBrokerForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const errorEl = document.getElementById('teamFormError');
+          errorEl.classList.add('hidden');
+          const email = document.getElementById('brokerEmail').value.trim();
+          const name = document.getElementById('brokerName').value.trim();
+          try {
+            const resp = await fetch('/api/manager/brokers', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, name })
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+              errorEl.textContent = data.error || 'Erreur.';
+              errorEl.classList.remove('hidden');
+              return;
+            }
+            document.getElementById('brokerEmail').value = '';
+            document.getElementById('brokerName').value = '';
+            loadTeam();
+          } catch {
+            errorEl.textContent = 'Erreur de connexion.';
+            errorEl.classList.remove('hidden');
+          }
+        });
+      }
+
+      async function loadTeam() {
+        const listEl = document.getElementById('teamList');
+        listEl.innerHTML = '<div class="session-empty">Chargement…</div>';
+        try {
+          const resp = await fetch('/api/manager/brokers', { headers: { 'Authorization': `Bearer ${token}` } });
+          const brokers = await resp.json();
+          if (brokers.length === 0) {
+            listEl.innerHTML = '<div class="session-empty">Aucun courtier dans votre équipe.</div>';
+            return;
+          }
+          listEl.innerHTML = brokers.map(b => `
+            <div class="team-item">
+              <div class="team-item-info">
+                <span class="team-item-name">${escapeHtml(b.name)}</span>
+                <span class="team-item-email">${escapeHtml(b.email)}</span>
+              </div>
+              ${b.authorized ? `<button class="team-revoke-btn" data-id="${b.id}">Révoquer</button>` : '<span class="team-revoked">Révoqué</span>'}
+            </div>
+          `).join('');
+          listEl.querySelectorAll('.team-revoke-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              if (!confirm('Révoquer l\'accès de ce courtier ?')) return;
+              await fetch(`/api/manager/brokers/${btn.dataset.id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              loadTeam();
+            });
+          });
+        } catch {
+          listEl.innerHTML = '<div class="session-empty">Erreur de chargement.</div>';
+        }
+      }
 
       fetch('/api/version').then(r => r.json()).then(d => {
         document.getElementById('versionTag').textContent = d.sha;

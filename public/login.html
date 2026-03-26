@@ -125,7 +125,7 @@
 
         localStorage.setItem('rodcast_token', data.token);
         localStorage.setItem('rodcast_broker', JSON.stringify(data.broker));
-        window.location.href = '/broker';
+        window.location.href = data.broker.role === 'admin' ? '/admin' : '/broker';
       } catch {
         showError('Erreur de connexion au serveur.');
       } finally {
@@ -151,7 +151,8 @@
     const token = localStorage.getItem('rodcast_token');
     if (token) {
       fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(r => { if (r.ok) window.location.href = '/broker'; })
+        .then(r => r.ok ? r.json() : null)
+        .then(broker => { if (broker) window.location.href = broker.role === 'admin' ? '/admin' : '/broker'; })
         .catch(() => {});
     }
   </script>

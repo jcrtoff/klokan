@@ -8,12 +8,17 @@ datasource db {
 }
 
 model Broker {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String
-  role      String    @default("broker") // "broker" | "manager"
-  createdAt DateTime  @default(now()) @map("created_at")
-  lastLogin DateTime? @map("last_login")
+  id         String    @id @default(uuid())
+  email      String    @unique
+  name       String
+  role       String    @default("broker") // "broker" | "manager" | "admin"
+  authorized Boolean   @default(false) @map("authorized")
+  managerId  String?   @map("manager_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastLogin  DateTime? @map("last_login")
+
+  manager    Broker?   @relation("BrokerTeam", fields: [managerId], references: [id])
+  teamMembers Broker[] @relation("BrokerTeam")
 
   assignedSessions   Session[] @relation("AssignedBroker")
   controlledSessions Session[] @relation("ControllingBroker")

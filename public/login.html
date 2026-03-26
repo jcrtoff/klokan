@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion — RodCast</title>
+  <title>Connexion — Klokan</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/i18n.js"></script>
 </head>
@@ -15,7 +15,7 @@
         <span class="lang-sep">|</span>
         <button data-lang="en" class="lang-btn" onclick="i18n.setLang('en')">EN</button>
       </div>
-      <h1>RodCast</h1>
+      <h1>Klokan</h1>
       <p class="login-subtitle" data-i18n="login_subtitle">Connexion courtier</p>
 
       <div id="stepEmail">
@@ -131,8 +131,8 @@
           return;
         }
 
-        localStorage.setItem('rodcast_token', data.token);
-        localStorage.setItem('rodcast_broker', JSON.stringify(data.broker));
+        localStorage.setItem('klokan_token', data.token);
+        localStorage.setItem('klokan_broker', JSON.stringify(data.broker));
         window.location.href = data.broker.role === 'admin' ? '/admin' : '/broker';
       } catch {
         showError('Erreur de connexion au serveur.');
@@ -156,7 +156,7 @@
     });
 
     // If already logged in, redirect
-    const token = localStorage.getItem('rodcast_token');
+    const token = localStorage.getItem('klokan_token');
     if (token) {
       fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
         .then(r => r.ok ? r.json() : null)

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: RodCast infrastructure — ECR
+Description: Klokan infrastructure — ECR
 
 Parameters:
   Environment:
@@ -14,7 +14,7 @@ Resources:
   Repository:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Sub "rodcast-${Environment}"
+      RepositoryName: !Sub "klokan-${Environment}"
       ImageTagMutability: MUTABLE
       ImageScanningConfiguration:
         ScanOnPush: true

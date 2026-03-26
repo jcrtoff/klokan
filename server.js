@@ -27,7 +27,7 @@ setupWebSocket(server);
 // ── Start ───────────────────────────────────────────────────────────────────
 ensureAdminsExist().then(() => {
   server.listen(PORT, () => {
-    console.log(`RodCast server running on http://localhost:${PORT}`);
+    console.log(`Klokan server running on http://localhost:${PORT}`);
     console.log(`  Chat: http://localhost:${PORT}/chat`);
     console.log(`  Broker: http://localhost:${PORT}/broker`);
     console.log(`  Admin: http://localhost:${PORT}/admin`);

@@ -10,7 +10,7 @@ fi
 
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 REGION=$(aws configure get region || echo "us-east-1")
-REPO="rodcast-${ENV}"
+REPO="klokan-${ENV}"
 ECR_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}"
 
 echo "Logging into ECR..."

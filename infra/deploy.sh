@@ -8,7 +8,7 @@ if [[ "$ENV" != "dev" && "$ENV" != "prd" ]]; then
   exit 1
 fi
 
-STACK_NAME="rodcast-${ENV}"
+STACK_NAME="klokan-${ENV}"
 TEMPLATE="$(cd "$(dirname "$0")" && pwd)/template.yaml"
 
 echo "Deploying stack ${STACK_NAME}..."

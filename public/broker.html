@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Courtier — RodCast</title>
+  <title>Courtier — Klokan</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/i18n.js"></script>
 </head>
@@ -40,7 +40,7 @@
     <!-- Center pane: conversation -->
     <div class="broker-left">
       <div class="broker-header">
-        <h1>RodCast</h1>
+        <h1>Klokan</h1>
         <div id="langToggle" class="lang-toggle">
           <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
           <span class="lang-sep">|</span>
@@ -133,7 +133,7 @@
 
     function switchLang(lang) {
       i18n.setLang(lang);
-      const t = localStorage.getItem('rodcast_token');
+      const t = localStorage.getItem('klokan_token');
       if (t) {
         fetch('/api/auth/settings', {
           method: 'PATCH',
@@ -144,25 +144,25 @@
     }
 
     // ── Auth check ────────────────────────────────────────────────────────
-    const token = localStorage.getItem('rodcast_token');
+    const token = localStorage.getItem('klokan_token');
     if (!token) { window.location.href = '/broker/login'; }
 
     let currentBroker = null;
-    try { currentBroker = JSON.parse(localStorage.getItem('rodcast_broker')); } catch {}
+    try { currentBroker = JSON.parse(localStorage.getItem('klokan_broker')); } catch {}
 
     (async () => {
       try {
         const resp = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
         if (!resp.ok) throw new Error();
         currentBroker = await resp.json();
-        localStorage.setItem('rodcast_broker', JSON.stringify(currentBroker));
+        localStorage.setItem('klokan_broker', JSON.stringify(currentBroker));
         document.getElementById('brokerNameDisplay').textContent = currentBroker.name;
         if (currentBroker.language) {
           i18n.setLang(currentBroker.language);
         }
       } catch {
-        localStorage.removeItem('rodcast_token');
-        localStorage.removeItem('rodcast_broker');
+        localStorage.removeItem('klokan_token');
+        localStorage.removeItem('klokan_broker');
         window.location.href = '/broker/login';
         return;
       }
@@ -170,8 +170,8 @@
     })();
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('rodcast_token');
-      localStorage.removeItem('rodcast_broker');
+      localStorage.removeItem('klokan_token');
+      localStorage.removeItem('klokan_broker');
       window.location.href = '/broker/login';
     });
 
@@ -209,8 +209,8 @@
 
           switch (msg.type) {
             case 'auth_error':
-              localStorage.removeItem('rodcast_token');
-              localStorage.removeItem('rodcast_broker');
+              localStorage.removeItem('klokan_token');
+              localStorage.removeItem('klokan_broker');
               window.location.href = '/broker/login';
               break;
 

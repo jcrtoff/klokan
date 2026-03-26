@@ -69,7 +69,7 @@
       invalid_email_error:  'Veuillez entrer un courriel valide.',
       invalid_code_error:   'Veuillez entrer le code à 6 chiffres.',
       // chat.html
-      subtitle:                  'Assistante · RodCast',
+      subtitle:                  'Assistante · Klokan',
       subtitle_with_broker_prefix: 'Assistante de',
       write_message:        'Écrire un message…',
       connecting:           'Connexion en cours…',
@@ -147,7 +147,7 @@
       invalid_email_error:  'Please enter a valid email.',
       invalid_code_error:   'Please enter the 6-digit code.',
       // chat.html
-      subtitle:                  'Assistant · RodCast',
+      subtitle:                  'Assistant · Klokan',
       subtitle_with_broker_prefix: 'Assistant of',
       write_message:        'Write a message…',
       connecting:           'Connecting…',
@@ -158,7 +158,7 @@
     }
   };
 
-  const STORAGE_KEY = 'rodcast_language';
+  const STORAGE_KEY = 'klokan_language';
   const SUPPORTED   = ['fr', 'en'];
   const DEFAULT     = 'fr';
 

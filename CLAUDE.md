@@ -1,4 +1,4 @@
-# RodCast
+# Klokan
 
 Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for brokers. Multi-broker support with passwordless auth. Bilingual French/English.
 
@@ -57,8 +57,8 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 | `DATABASE_URL` | Yes | — | PostgreSQL connection string |
 | `JWT_SECRET` | Prod | random bytes | JWT signing secret |
 | `BREVO_API_KEY` | Prod | — | Brevo SMTP API key. Unset = OTP logged to console |
-| `BREVO_SENDER_EMAIL` | No | `noreply@rodcast.ca` | Email sender address |
-| `BREVO_SENDER_NAME` | No | `RodCast` | Email sender display name |
+| `BREVO_SENDER_EMAIL` | No | `noreply@klokan.live` | Email sender address |
+| `BREVO_SENDER_NAME` | No | `Klokan` | Email sender display name |
 | `DEFAULT_BROKER_NAME` | No | `Rod` | Name in system prompt for unassigned sessions |
 | `PORT` | No | `3000` | Server port |
 | `COMMIT_SHA` | No | `dev` | Set at Docker build time |
@@ -71,7 +71,7 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 ./scripts/deploy-local.sh
 
 # Or manually:
-docker start rodcast-postgres  # or create with deploy-local.sh first
+docker start klokan-postgres  # or create with deploy-local.sh first
 cp .env.example .env           # fill in ANTHROPIC_API_KEY
 npx prisma migrate deploy
 npm run dev

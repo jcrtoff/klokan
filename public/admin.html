@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — RodCast</title>
+  <title>Admin — Klokan</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/i18n.js"></script>
   <style>
@@ -119,7 +119,7 @@
 <body>
   <div class="admin-container">
     <div class="admin-header">
-      <h1>RodCast — Admin</h1>
+      <h1>Klokan — Admin</h1>
       <div style="display: flex; align-items: center; gap: 16px;">
         <div id="langToggle" class="lang-toggle">
           <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
@@ -170,7 +170,7 @@
 
     function switchLang(lang) {
       i18n.setLang(lang);
-      const t = localStorage.getItem('rodcast_token');
+      const t = localStorage.getItem('klokan_token');
       if (t) {
         fetch('/api/auth/settings', {
           method: 'PATCH',
@@ -180,7 +180,7 @@
       }
     }
 
-    const token = localStorage.getItem('rodcast_token');
+    const token = localStorage.getItem('klokan_token');
     if (!token) { window.location.href = '/broker/login'; }
 
     // Verify token and role
@@ -197,8 +197,8 @@
           i18n.setLang(broker.language);
         }
       } catch {
-        localStorage.removeItem('rodcast_token');
-        localStorage.removeItem('rodcast_broker');
+        localStorage.removeItem('klokan_token');
+        localStorage.removeItem('klokan_broker');
         window.location.href = '/broker/login';
         return;
       }
@@ -206,8 +206,8 @@
     })();
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('rodcast_token');
-      localStorage.removeItem('rodcast_broker');
+      localStorage.removeItem('klokan_token');
+      localStorage.removeItem('klokan_broker');
       window.location.href = '/broker/login';
     });
 

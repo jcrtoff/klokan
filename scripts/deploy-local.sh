@@ -44,6 +44,9 @@ echo "  Doppler: ${DOPPLER_PROJECT}/${DOPPLER_CONFIG}"
 
 ensure_postgres
 
+echo "  Installing dependencies..."
+npm install
+
 echo "  Running Prisma migrations..."
 export DATABASE_URL="postgresql://postgres:postgres@localhost:37804/rodcast"
 npx prisma migrate deploy

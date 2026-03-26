@@ -4,7 +4,7 @@ Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for broker
 
 ## Tech stack
 
-- **Runtime**: Node.js 20, Express 4, WebSocket (`ws`)
+- **Runtime**: Node.js 25, Express 4, WebSocket (`ws`)
 - **AI**: Anthropic Claude API (`@anthropic-ai/sdk`), chat model `claude-sonnet-4-6`, extraction model `claude-haiku-4-5-20251001`
 - **DB**: PostgreSQL 16 via Prisma ORM
 - **Auth**: Passwordless OTP via Brevo email, JWT sessions
@@ -37,7 +37,8 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 | `lib/sessions.js` | Session CRUD, in-memory cache + DB sync |
 | `lib/websocket.js` | WS message handling, filtered broadcast |
 | `lib/claude.js` | Claude streaming, lead extraction, system prompt |
-| `prisma/schema.prisma` | Database schema |
+| `prisma/schema.prisma` | Database schema (models, no URL — Prisma 7) |
+| `prisma.config.ts` | Prisma 7 config — provides `DATABASE_URL` to migrations and client |
 | `public/chat.html` | Mobile client chat UI |
 | `public/broker.html` | Broker dashboard |
 | `public/login.html` | Passwordless login page |
@@ -75,7 +76,7 @@ npx prisma migrate deploy
 npm run dev
 ```
 
-`deploy-local.sh` ensures PostgreSQL is running (Docker on port 37804), runs migrations, then starts the app via Doppler.
+`deploy-local.sh` ensures PostgreSQL is running (Docker on port 37804), installs npm dependencies, runs migrations, then starts the app via Doppler.
 
 ## Deployment
 

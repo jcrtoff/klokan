@@ -15,7 +15,7 @@ Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for broker
 
 Single `server.js` process runs both an Express HTTP server and a WebSocket server on the same port. Code is organized into `lib/` modules.
 
-- **`/chat`** — mobile-first client UI for end users. Supports `?broker=<id>` for pre-assignment.
+- **`/chat`** — mobile-first client UI for end users. Supports `?broker=<id>` for pre-assignment. Protected by HTTP Basic Auth when `CHAT_BASIC_AUTH` is set.
 - **`/broker`** — desktop dashboard for brokers (courtiers). Requires auth.
 - **`/broker/login`** — passwordless login page (email → OTP code → JWT)
 - **`/health`** — health check endpoint
@@ -62,6 +62,7 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 | `DEFAULT_BROKER_NAME` | No | `Rod` | Name in system prompt for unassigned sessions |
 | `PORT` | No | `3000` | Server port |
 | `COMMIT_SHA` | No | `dev` | Set at Docker build time |
+| `CHAT_BASIC_AUTH` | No | — | `user:password` — if set, `/chat` requires HTTP Basic Auth |
 
 ## Local development
 

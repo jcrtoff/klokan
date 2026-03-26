@@ -102,3 +102,4 @@ npm run dev
 - `set -euo pipefail` in all shell scripts
 - Non-root Docker user (`app`)
 - Git SHA embedded in image for build tracking (`COMMIT_SHA`)
+- Ticket prefix: `KK-XX` (previously `ROD-XX`)

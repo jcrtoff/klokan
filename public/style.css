@@ -630,12 +630,45 @@ body {
 }
 
 .login-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 40px 32px;
   width: 100%;
   max-width: 400px;
+}
+
+/* ── Language toggle ─────────────────────────────────────────── */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0 2px;
+  letter-spacing: 0.5px;
+}
+
+.lang-btn.lang-active {
+  color: var(--text-primary);
+}
+
+.lang-btn:hover {
+  color: var(--text-primary);
+}
+
+.lang-sep {
+  color: var(--border);
+  font-size: 12px;
+  line-height: 1;
 }
 
 .login-card h1 {

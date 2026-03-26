@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — RodCast</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
   <style>
     .admin-container {
       max-width: 720px;
@@ -119,45 +120,66 @@
   <div class="admin-container">
     <div class="admin-header">
       <h1>RodCast — Admin</h1>
-      <button id="logoutBtn" class="link-btn">Déconnexion</button>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div id="langToggle" class="lang-toggle">
+          <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
+          <span class="lang-sep">|</span>
+          <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
+        </div>
+        <button id="logoutBtn" class="link-btn" data-i18n="logout">Déconnexion</button>
+      </div>
     </div>
 
     <div class="admin-section">
-      <h2>Gestionnaires</h2>
+      <h2 data-i18n="managers">Gestionnaires</h2>
       <table class="admin-table" id="managersTable">
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Courriel</th>
-            <th>Statut</th>
-            <th>Dernière connexion</th>
+            <th data-i18n="name_label">Nom</th>
+            <th data-i18n="email_label">Courriel</th>
+            <th data-i18n="status">Statut</th>
+            <th data-i18n="last_login">Dernière connexion</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="managersBody">
-          <tr class="empty-row"><td colspan="5">Chargement…</td></tr>
+          <tr class="empty-row"><td colspan="5" data-i18n="loading">Chargement…</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="admin-section">
-      <h2>Ajouter un gestionnaire</h2>
+      <h2 data-i18n="add_manager">Ajouter un gestionnaire</h2>
       <form class="admin-form" id="addManagerForm" autocomplete="off">
         <div class="field">
-          <label for="mgEmail">Courriel</label>
-          <input type="email" id="mgEmail" placeholder="gestionnaire@example.com" required>
+          <label for="mgEmail" data-i18n="email_label">Courriel</label>
+          <input type="email" id="mgEmail" placeholder="gestionnaire@example.com" data-i18n="mgr_email_placeholder" data-i18n-target="placeholder" required>
         </div>
         <div class="field">
-          <label for="mgName">Nom</label>
-          <input type="text" id="mgName" placeholder="Prénom Nom" required>
+          <label for="mgName" data-i18n="name_label">Nom</label>
+          <input type="text" id="mgName" placeholder="Prénom Nom" data-i18n="mgr_name_placeholder" data-i18n-target="placeholder" required>
         </div>
-        <button type="submit" id="addBtn">Ajouter</button>
+        <button type="submit" id="addBtn" data-i18n="add_btn">Ajouter</button>
       </form>
       <div class="form-error hidden" id="formError"></div>
     </div>
   </div>
 
   <script>
+    i18n.init();
+
+    function switchLang(lang) {
+      i18n.setLang(lang);
+      const t = localStorage.getItem('rodcast_token');
+      if (t) {
+        fetch('/api/auth/settings', {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${t}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: lang })
+        }).catch(() => {});
+      }
+    }
+
     const token = localStorage.getItem('rodcast_token');
     if (!token) { window.location.href = '/broker/login'; }
 
@@ -170,6 +192,9 @@
         if (broker.role !== 'admin') {
           window.location.href = '/broker';
           return;
+        }
+        if (broker.language) {
+          i18n.setLang(broker.language);
         }
       } catch {
         localStorage.removeItem('rodcast_token');
@@ -204,23 +229,23 @@
         renderManagers(managers);
       } catch {
         document.getElementById('managersBody').innerHTML =
-          '<tr class="empty-row"><td colspan="5">Erreur de chargement.</td></tr>';
+          `<tr class="empty-row"><td colspan="5">${i18n.t('load_error')}</td></tr>`;
       }
     }
 
     function renderManagers(managers) {
       const tbody = document.getElementById('managersBody');
       if (managers.length === 0) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Aucun gestionnaire.</td></tr>';
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${i18n.t('no_managers')}</td></tr>`;
         return;
       }
       tbody.innerHTML = managers.map(m => `
         <tr data-id="${m.id}">
           <td>${escapeHtml(m.name)}</td>
           <td class="muted">${escapeHtml(m.email)}</td>
-          <td>${m.authorized ? '<span class="badge-authorized">Actif</span>' : '<span class="badge-revoked">Révoqué</span>'}</td>
+          <td>${m.authorized ? `<span class="badge-authorized">${i18n.t('active')}</span>` : `<span class="badge-revoked">${i18n.t('revoked')}</span>`}</td>
           <td class="muted">${formatDate(m.lastLogin)}</td>
-          <td>${m.authorized ? `<button class="revoke-btn" data-id="${m.id}">Révoquer</button>` : ''}</td>
+          <td>${m.authorized ? `<button class="revoke-btn" data-id="${m.id}">${i18n.t('revoke')}</button>` : ''}</td>
         </tr>
       `).join('');
 
@@ -230,7 +255,7 @@
     }
 
     async function revokeManager(id) {
-      if (!confirm('Révoquer l\'accès de ce gestionnaire ?')) return;
+      if (!confirm(i18n.t('revoke_manager_confirm'))) return;
       try {
         await fetch(`/api/admin/managers/${id}`, {
           method: 'DELETE',
@@ -238,7 +263,7 @@
         });
         loadManagers();
       } catch {
-        alert('Erreur lors de la révocation.');
+        alert(i18n.t('revoke_error'));
       }
     }
 
@@ -258,7 +283,7 @@
         });
         const data = await resp.json();
         if (!resp.ok) {
-          errorEl.textContent = data.error || 'Erreur.';
+          errorEl.textContent = data.error || i18n.t('connection_error');
           errorEl.classList.remove('hidden');
           return;
         }
@@ -266,7 +291,7 @@
         document.getElementById('mgName').value = '';
         loadManagers();
       } catch {
-        errorEl.textContent = 'Erreur de connexion.';
+        errorEl.textContent = i18n.t('connection_error');
         errorEl.classList.remove('hidden');
       } finally {
         addBtn.disabled = false;

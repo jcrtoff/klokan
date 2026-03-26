@@ -23,8 +23,18 @@ model Broker {
   assignedSessions   Session[] @relation("AssignedBroker")
   controlledSessions Session[] @relation("ControllingBroker")
   messages           Message[]
+  settings           BrokerSettings?
 
   @@map("brokers")
+}
+
+model BrokerSettings {
+  id        String @id @default(uuid())
+  brokerId  String @unique @map("broker_id")
+  language  String @default("fr") @map("language") // "fr" | "en"
+  broker    Broker @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+
+  @@map("broker_settings")
 }
 
 model OtpCode {

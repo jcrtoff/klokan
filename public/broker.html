@@ -5,32 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Courtier — RodCast</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
 </head>
 <body>
   <div class="broker-container">
     <!-- Left pane: session sidebar -->
     <div class="broker-sidebar">
       <div class="sidebar-header">
-        <h2 id="sidebarTitle">Sessions</h2>
+        <h2 id="sidebarTitle" data-i18n="sessions">Sessions</h2>
         <div class="broker-identity">
           <span id="brokerNameDisplay"></span>
-          <button id="logoutBtn" class="link-btn">Déconnexion</button>
+          <button id="logoutBtn" class="link-btn" data-i18n="logout">Déconnexion</button>
         </div>
       </div>
       <div class="sidebar-tabs hidden" id="sidebarTabs">
-        <button class="sidebar-tab active" data-tab="sessions">Sessions</button>
-        <button class="sidebar-tab" data-tab="team">Mon équipe</button>
+        <button class="sidebar-tab active" data-tab="sessions" data-i18n="sessions">Sessions</button>
+        <button class="sidebar-tab" data-tab="team" data-i18n="my_team">Mon équipe</button>
       </div>
       <div class="session-list" id="sessionList">
-        <div class="session-empty">Aucune session active</div>
+        <div class="session-empty" data-i18n="no_active_session">Aucune session active</div>
       </div>
       <div class="team-panel hidden" id="teamPanel">
         <div class="team-list" id="teamList"></div>
         <form class="team-form" id="addBrokerForm">
-          <div class="team-form-title">Ajouter un courtier</div>
-          <input type="email" id="brokerEmail" placeholder="courriel@example.com">
-          <input type="text" id="brokerName" placeholder="Prénom Nom">
-          <button type="submit">Ajouter</button>
+          <div class="team-form-title" data-i18n="add_broker">Ajouter un courtier</div>
+          <input type="email" id="brokerEmail" placeholder="courriel@example.com" data-i18n="email_placeholder" data-i18n-target="placeholder">
+          <input type="text" id="brokerName" placeholder="Prénom Nom" data-i18n="name_placeholder" data-i18n-target="placeholder">
+          <button type="submit" data-i18n="add_btn">Ajouter</button>
           <div class="team-form-error hidden" id="teamFormError"></div>
         </form>
       </div>
@@ -40,26 +41,31 @@
     <div class="broker-left">
       <div class="broker-header">
         <h1>RodCast</h1>
+        <div id="langToggle" class="lang-toggle">
+          <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
+          <span class="lang-sep">|</span>
+          <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
+        </div>
         <span class="connection-status" id="connStatus">Connecté</span>
       </div>
 
       <div class="stats-bar" id="statsBar">
         <div class="stat-item">
-          <span class="stat-label">Tokens</span>
+          <span class="stat-label" data-i18n="tokens">Tokens</span>
           <span class="stat-value" id="statTotalTokens">0</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Coût</span>
+          <span class="stat-label" data-i18n="cost">Coût</span>
           <span class="stat-value" id="statTotalCost">$0.0000</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Temps moy.</span>
+          <span class="stat-label" data-i18n="avg_time">Temps moy.</span>
           <span class="stat-value" id="statAvgTime">—</span>
         </div>
       </div>
 
       <div class="broker-messages" id="messages">
-        <div class="no-session-selected">Sélectionnez une session à gauche</div>
+        <div class="no-session-selected" data-i18n="select_session">Sélectionnez une session à gauche</div>
       </div>
 
       <div class="broker-bottom">
@@ -69,8 +75,8 @@
           <button class="intervenir-btn" id="intervenirBtn" disabled>Intervenir</button>
         </div>
         <div class="broker-compose" id="composeBar">
-          <input type="text" id="brokerInput" placeholder="Écrire au client…" autocomplete="off">
-          <button id="brokerSendBtn">Envoyer</button>
+          <input type="text" id="brokerInput" placeholder="Écrire au client…" data-i18n="write_to_client" data-i18n-target="placeholder" autocomplete="off">
+          <button id="brokerSendBtn" data-i18n="send">Envoyer</button>
         </div>
       </div>
     </div>
@@ -85,36 +91,36 @@
 
       <div class="score-badge froid" id="scoreBadge">FROID</div>
 
-      <div class="qual-section-title">Qualification</div>
+      <div class="qual-section-title" data-i18n="qualification">Qualification</div>
       <div class="qual-grid">
         <div class="qual-item">
-          <div class="label">Projet</div>
+          <div class="label" data-i18n="project">Projet</div>
           <div class="value" id="qProjectType">—</div>
         </div>
         <div class="qual-item">
-          <div class="label">Budget</div>
+          <div class="label" data-i18n="budget">Budget</div>
           <div class="value" id="qBudget">—</div>
         </div>
         <div class="qual-item">
-          <div class="label">Secteur</div>
+          <div class="label" data-i18n="sector">Secteur</div>
           <div class="value" id="qNeighbourhood">—</div>
         </div>
         <div class="qual-item">
-          <div class="label">Type</div>
+          <div class="label" data-i18n="type">Type</div>
           <div class="value" id="qPropertyType">—</div>
         </div>
         <div class="qual-item">
-          <div class="label">Délai</div>
+          <div class="label" data-i18n="timeline">Délai</div>
           <div class="value" id="qTimeline">—</div>
         </div>
         <div class="qual-item">
-          <div class="label">Pré-approbation</div>
+          <div class="label" data-i18n="pre_approval">Pré-approbation</div>
           <div class="value" id="qPreApproval">—</div>
         </div>
       </div>
 
       <div class="notes-section">
-        <div class="label">Notes IA</div>
+        <div class="label" data-i18n="ai_notes">Notes IA</div>
         <div class="value" id="notesValue">Aucune note pour le moment.</div>
       </div>
       <div class="version-tag" id="versionTag"></div>
@@ -122,6 +128,21 @@
   </div>
 
   <script>
+    // ── Language init (fast, before auth) ────────────────────────────────
+    i18n.init();
+
+    function switchLang(lang) {
+      i18n.setLang(lang);
+      const t = localStorage.getItem('rodcast_token');
+      if (t) {
+        fetch('/api/auth/settings', {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${t}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: lang })
+        }).catch(() => {});
+      }
+    }
+
     // ── Auth check ────────────────────────────────────────────────────────
     const token = localStorage.getItem('rodcast_token');
     if (!token) { window.location.href = '/broker/login'; }
@@ -136,6 +157,9 @@
         currentBroker = await resp.json();
         localStorage.setItem('rodcast_broker', JSON.stringify(currentBroker));
         document.getElementById('brokerNameDisplay').textContent = currentBroker.name;
+        if (currentBroker.language) {
+          i18n.setLang(currentBroker.language);
+        }
       } catch {
         localStorage.removeItem('rodcast_token');
         localStorage.removeItem('rodcast_broker');
@@ -177,7 +201,7 @@
 
         ws.onopen = () => {
           ws.send(JSON.stringify({ type: 'identify', role: 'broker', token }));
-          connStatus.textContent = 'Connecté';
+          connStatus.textContent = i18n.t('connected');
         };
 
         ws.onmessage = (e) => {
@@ -266,16 +290,16 @@
               if (msg.sessionId === activeSessionId) {
                 intervening = msg.active;
                 composeBar.classList.toggle('visible', intervening);
-                intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
+                intervenirBtn.textContent = intervening ? i18n.t('yield_btn') : i18n.t('intervenir_btn');
                 intervenirBtn.classList.toggle('active', intervening);
-                brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+                brokerStatus.textContent = intervening ? i18n.t('broker_took_over') : i18n.t('ai_in_conversation');
               }
               break;
           }
         };
 
         ws.onclose = () => {
-          connStatus.textContent = 'Déconnecté';
+          connStatus.textContent = i18n.t('disconnected');
           setTimeout(connect, 2000);
         };
       }
@@ -288,7 +312,7 @@
         }
 
         if (sessionsList.length === 0) {
-          sessionListEl.innerHTML = '<div class="session-empty">Aucune session active</div>';
+          sessionListEl.innerHTML = `<div class="session-empty">${i18n.t('no_active_session')}</div>`;
           return;
         }
 
@@ -298,15 +322,15 @@
           item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '');
           item.dataset.sessionId = s.id;
 
-          const name = s.leadName || 'Nouveau client';
+          const name = s.leadName || i18n.t('new_client');
           const score = s.leadScore ? s.leadScore.toLowerCase() : 'froid';
           const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : score;
 
           let badge = '';
           if (s.controlledByBrokerId) {
-            badge = '<span class="session-broker-badge">Courtier</span>';
+            badge = `<span class="session-broker-badge">${i18n.t('broker_badge')}</span>`;
           } else if (!s.assignedBrokerId) {
-            badge = '<span class="session-unassigned-badge">Non assigné</span>';
+            badge = `<span class="session-unassigned-badge">${i18n.t('unassigned_badge')}</span>`;
           } else if (s.assignedBrokerName) {
             badge = '<span class="session-assigned-badge">' + escapeHtml(s.assignedBrokerName) + '</span>';
           }
@@ -352,9 +376,9 @@
         intervenirBtn.disabled = false;
         intervening = false;
         composeBar.classList.remove('visible');
-        intervenirBtn.textContent = 'Intervenir';
+        intervenirBtn.textContent = i18n.t('intervenir_btn');
         intervenirBtn.classList.remove('active');
-        brokerStatus.textContent = 'IA en conversation';
+        brokerStatus.textContent = i18n.t('ai_in_conversation');
         streamBubble = null;
         lastCompletedBubble = null;
         updateClaimButton();
@@ -381,13 +405,13 @@
       }
 
       function resetProfile() {
-        document.getElementById('leadName').textContent = 'Client inconnu';
+        document.getElementById('leadName').textContent = i18n.t('unknown_client');
         document.getElementById('avatar').textContent = '—';
         document.getElementById('avatar').classList.remove('populated');
         document.getElementById('leadContact').textContent = '—';
         document.getElementById('scoreBadge').textContent = 'FROID';
         document.getElementById('scoreBadge').className = 'score-badge froid';
-        document.getElementById('notesValue').textContent = 'Aucune note pour le moment.';
+        document.getElementById('notesValue').textContent = i18n.t('no_notes');
         const fields = ['qProjectType', 'qBudget', 'qNeighbourhood', 'qPropertyType', 'qTimeline', 'qPreApproval'];
         for (const id of fields) {
           const el = document.getElementById(id);
@@ -493,9 +517,9 @@
         if (!activeSessionId) return;
         intervening = !intervening;
         composeBar.classList.toggle('visible', intervening);
-        intervenirBtn.textContent = intervening ? "Rendre le contrôle à l'IA" : 'Intervenir';
+        intervenirBtn.textContent = intervening ? i18n.t('yield_btn') : i18n.t('intervenir_btn');
         intervenirBtn.classList.toggle('active', intervening);
-        brokerStatus.textContent = intervening ? 'Vous avez pris le relais' : 'IA en conversation';
+        brokerStatus.textContent = intervening ? i18n.t('broker_took_over') : i18n.t('ai_in_conversation');
         if (intervening) brokerInput.focus();
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'broker_control', active: intervening, sessionId: activeSessionId }));
@@ -554,7 +578,7 @@
             });
             const data = await resp.json();
             if (!resp.ok) {
-              errorEl.textContent = data.error || 'Erreur.';
+              errorEl.textContent = data.error || i18n.t('connection_error');
               errorEl.classList.remove('hidden');
               return;
             }
@@ -562,7 +586,7 @@
             document.getElementById('brokerName').value = '';
             loadTeam();
           } catch {
-            errorEl.textContent = 'Erreur de connexion.';
+            errorEl.textContent = i18n.t('connection_error');
             errorEl.classList.remove('hidden');
           }
         });
@@ -570,12 +594,12 @@
 
       async function loadTeam() {
         const listEl = document.getElementById('teamList');
-        listEl.innerHTML = '<div class="session-empty">Chargement…</div>';
+        listEl.innerHTML = `<div class="session-empty">${i18n.t('loading')}</div>`;
         try {
           const resp = await fetch('/api/manager/brokers', { headers: { 'Authorization': `Bearer ${token}` } });
           const brokers = await resp.json();
           if (brokers.length === 0) {
-            listEl.innerHTML = '<div class="session-empty">Aucun courtier dans votre équipe.</div>';
+            listEl.innerHTML = `<div class="session-empty">${i18n.t('no_team_brokers')}</div>`;
             return;
           }
           listEl.innerHTML = brokers.map(b => `
@@ -584,12 +608,12 @@
                 <span class="team-item-name">${escapeHtml(b.name)}</span>
                 <span class="team-item-email">${escapeHtml(b.email)}</span>
               </div>
-              ${b.authorized ? `<button class="team-revoke-btn" data-id="${b.id}">Révoquer</button>` : '<span class="team-revoked">Révoqué</span>'}
+              ${b.authorized ? `<button class="team-revoke-btn" data-id="${b.id}">${i18n.t('revoke')}</button>` : `<span class="team-revoked">${i18n.t('revoked')}</span>`}
             </div>
           `).join('');
           listEl.querySelectorAll('.team-revoke-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-              if (!confirm('Révoquer l\'accès de ce courtier ?')) return;
+              if (!confirm(i18n.t('revoke_confirm'))) return;
               await fetch(`/api/manager/brokers/${btn.dataset.id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -598,7 +622,7 @@
             });
           });
         } catch {
-          listEl.innerHTML = '<div class="session-empty">Erreur de chargement.</div>';
+          listEl.innerHTML = `<div class="session-empty">${i18n.t('load_error')}</div>`;
         }
       }
 

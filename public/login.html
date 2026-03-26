@@ -5,33 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion — RodCast</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
 </head>
 <body>
   <div class="login-container">
     <div class="login-card">
+      <div id="langToggle" class="lang-toggle" style="position: absolute; top: 16px; right: 16px;">
+        <button data-lang="fr" class="lang-btn lang-active" onclick="i18n.setLang('fr')">FR</button>
+        <span class="lang-sep">|</span>
+        <button data-lang="en" class="lang-btn" onclick="i18n.setLang('en')">EN</button>
+      </div>
       <h1>RodCast</h1>
-      <p class="login-subtitle">Connexion courtier</p>
+      <p class="login-subtitle" data-i18n="login_subtitle">Connexion courtier</p>
 
       <div id="stepEmail">
-        <label for="emailInput">Courriel</label>
-        <input type="email" id="emailInput" placeholder="votre@courriel.com" autocomplete="email">
-        <button id="requestCodeBtn">Envoyer le code</button>
+        <label for="emailInput" data-i18n="email_label">Courriel</label>
+        <input type="email" id="emailInput" placeholder="votre@courriel.com" data-i18n="email_input_placeholder" data-i18n-target="placeholder" autocomplete="email">
+        <button id="requestCodeBtn" data-i18n="send_code">Envoyer le code</button>
       </div>
 
       <div id="stepCode" class="hidden">
-        <p class="login-info">Un code à 6 chiffres a été envoyé à <strong id="emailDisplay"></strong></p>
-        <label for="codeInput">Code de vérification</label>
+        <p class="login-info"><span data-i18n="code_sent_prefix">Un code à 6 chiffres a été envoyé à</span> <strong id="emailDisplay"></strong></p>
+        <label for="codeInput" data-i18n="verify_code_label">Code de vérification</label>
         <input type="text" id="codeInput" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
-        <button id="verifyBtn">Vérifier</button>
-        <button id="backBtn" class="link-btn">Changer de courriel</button>
+        <button id="verifyBtn" data-i18n="verify_btn">Vérifier</button>
+        <button id="backBtn" class="link-btn" data-i18n="change_email">Changer de courriel</button>
       </div>
 
       <div id="errorMsg" class="login-error hidden"></div>
-      <div id="loadingMsg" class="login-loading hidden">Chargement…</div>
+      <div id="loadingMsg" class="login-loading hidden" data-i18n="loading_msg">Chargement…</div>
     </div>
   </div>
 
   <script>
+    i18n.init();
+
     const emailInput = document.getElementById('emailInput');
     const codeInput = document.getElementById('codeInput');
     const requestCodeBtn = document.getElementById('requestCodeBtn');
@@ -71,7 +79,7 @@
       clearError();
       const email = emailInput.value.trim();
       if (!email || !email.includes('@')) {
-        showError('Veuillez entrer un courriel valide.');
+        showError(i18n.t('invalid_email_error'));
         return;
       }
 
@@ -105,7 +113,7 @@
       clearError();
       const code = codeInput.value.trim();
       if (!code || code.length !== 6) {
-        showError('Veuillez entrer le code à 6 chiffres.');
+        showError(i18n.t('invalid_code_error'));
         return;
       }
 

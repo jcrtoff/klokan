@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Roxanne — RodCast</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
 </head>
 <body>
   <div class="chat-container">
@@ -13,6 +14,11 @@
       <div>
         <h1>Roxanne</h1>
         <div class="subtitle" id="subtitle">Assistante · RodCast</div>
+      </div>
+      <div id="langToggle" class="lang-toggle" style="margin-left: auto;">
+        <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
+        <span class="lang-sep">|</span>
+        <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
       </div>
     </div>
 
@@ -23,15 +29,17 @@
       <div class="broker-typing-indicator" id="brokerTyping"></div>
     </div>
 
-    <div class="connection-banner visible" id="connectionBanner">Connexion en cours…</div>
+    <div class="connection-banner visible" id="connectionBanner" data-i18n="connecting">Connexion en cours…</div>
     <div class="input-bar">
-      <input type="text" id="msgInput" placeholder="Écrire un message…" autocomplete="off">
-      <button id="sendBtn" disabled>Envoyer</button>
+      <input type="text" id="msgInput" placeholder="Écrire un message…" data-i18n="write_message" data-i18n-target="placeholder" autocomplete="off">
+      <button id="sendBtn" disabled data-i18n="send">Envoyer</button>
     </div>
     <div class="version-tag" id="versionTag"></div>
   </div>
 
   <script>
+    i18n.init();
+
     const messages = document.getElementById('messages');
     const msgInput = document.getElementById('msgInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -44,8 +52,22 @@
     let sessionId = sessionStorage.getItem('rodcast_sessionId');
     let connectAttempts = 0;
     const MAX_RETRY_ATTEMPTS = 5;
+    let currentBrokerName = null;
 
     const connectionBanner = document.getElementById('connectionBanner');
+
+    function switchLang(lang) {
+      i18n.setLang(lang);
+      updateSubtitle(currentBrokerName);
+    }
+
+    function updateSubtitle(brokerName) {
+      if (brokerName) {
+        subtitleEl.textContent = `${i18n.t('subtitle_with_broker_prefix')} ${brokerName} · RodCast`;
+      } else {
+        subtitleEl.textContent = i18n.t('subtitle');
+      }
+    }
 
     // Check for pre-assigned broker
     const params = new URLSearchParams(location.search);
@@ -80,13 +102,11 @@
           case 'session_assigned':
             sessionId = msg.sessionId;
             sessionStorage.setItem('rodcast_sessionId', sessionId);
-            if (msg.brokerName) {
-              subtitleEl.textContent = `Assistante de ${msg.brokerName} · RodCast`;
-              brokerTyping.textContent = `${msg.brokerName} est en train d'écrire…`;
-            } else {
-              subtitleEl.textContent = 'Assistante · RodCast';
-              brokerTyping.textContent = 'Le courtier est en train d\'écrire…';
-            }
+            currentBrokerName = msg.brokerName || null;
+            updateSubtitle(currentBrokerName);
+            brokerTyping.textContent = currentBrokerName
+              ? `${currentBrokerName} ${i18n.t('is_typing')}`
+              : i18n.t('broker_typing');
             break;
 
           case 'message':
@@ -118,10 +138,10 @@
         setConnected(false);
         connectAttempts++;
         if (connectAttempts >= MAX_RETRY_ATTEMPTS) {
-          connectionBanner.textContent = 'Impossible de se connecter. Veuillez rafraîchir la page.';
+          connectionBanner.textContent = i18n.t('max_retry');
           return;
         }
-        connectionBanner.textContent = 'Reconnexion…';
+        connectionBanner.textContent = i18n.t('reconnecting');
         setTimeout(connect, 2000);
       };
     }

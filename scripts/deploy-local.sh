@@ -3,6 +3,29 @@ set -euo pipefail
 
 DOPPLER_PROJECT="${DOPPLER_PROJECT:-klokan}"
 DOPPLER_CONFIG="${DOPPLER_CONFIG:-dev}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-klokan-postgres}"
+POSTGRES_HOST="${POSTGRES_HOST:-127.0.0.1}"
+POSTGRES_PORT="${POSTGRES_PORT:-37804}"
+
+wait_for_postgres() {
+  local deadline=$((SECONDS + 60))
+
+  echo "  Waiting for Postgres..."
+  while ! nc -z "${POSTGRES_HOST}" "${POSTGRES_PORT}" &>/dev/null; do
+    if (( SECONDS >= deadline )); then
+      echo "  Postgres did not become ready within 60s."
+      echo "  Container status:"
+      docker ps -a --filter name="${POSTGRES_CONTAINER}" --format '    {{.Names}}\t{{.Status}}\t{{.Ports}}' || true
+      echo "  Inspect:"
+      docker inspect "${POSTGRES_CONTAINER}" --format '    Status={{.State.Status}} Running={{.State.Running}} ExitCode={{.State.ExitCode}} Error={{.State.Error}}' || true
+      echo "  Recent logs:"
+      docker logs --tail 50 "${POSTGRES_CONTAINER}" || true
+      exit 1
+    fi
+    sleep 0.5
+  done
+  echo "  Postgres is ready."
+}
 
 ensure_postgres() {
   if ! command -v docker &>/dev/null; then
@@ -10,33 +33,35 @@ ensure_postgres() {
     exit 1
   fi
 
-  if docker ps --format '{{.Names}}' | grep -q '^klokan-postgres$'; then
-    if nc -z localhost 37804 2>/dev/null; then
+  if docker ps --format '{{.Names}}' | grep -q "^${POSTGRES_CONTAINER}$"; then
+    if nc -z "${POSTGRES_HOST}" "${POSTGRES_PORT}" 2>/dev/null; then
       echo "  Postgres already running."
       return
     fi
-    echo "  Postgres running but port not bound, restarting..."
-    docker restart klokan-postgres
-  elif docker ps -a --format '{{.Names}}' | grep -q '^klokan-postgres$'; then
+    echo "  Postgres running but port not bound, recreating..."
+    docker rm -f "${POSTGRES_CONTAINER}" >/dev/null
+  elif docker ps -a --format '{{.Names}}' | grep -q "^${POSTGRES_CONTAINER}$"; then
     echo "  Starting existing Postgres container..."
-    docker start klokan-postgres
+    if nc -z "${POSTGRES_HOST}" "${POSTGRES_PORT}" 2>/dev/null; then
+      echo "  Postgres already running."
+      return
+    fi
+    echo "  Existing container has no published port, recreating..."
+    docker rm "${POSTGRES_CONTAINER}" >/dev/null
   else
     echo "  Creating Postgres container..."
-    lsof -ti :37804 | xargs kill 2>/dev/null || true
-    docker run -d \
-      --name klokan-postgres \
-      -e POSTGRES_USER=postgres \
-      -e POSTGRES_PASSWORD=postgres \
-      -e POSTGRES_DB=klokan \
-      -p 37804:5432 \
-      postgres:16
   fi
 
-  echo "  Waiting for Postgres..."
-  until docker exec klokan-postgres pg_isready -U postgres &>/dev/null && nc -z localhost 37804 2>/dev/null; do
-    sleep 0.5
-  done
-  echo "  Postgres is ready."
+  lsof -ti :"${POSTGRES_PORT}" | xargs kill 2>/dev/null || true
+  docker run -d \
+    --name "${POSTGRES_CONTAINER}" \
+    -e POSTGRES_USER=postgres \
+    -e POSTGRES_PASSWORD=postgres \
+    -e POSTGRES_DB=klokan \
+    -p "${POSTGRES_PORT}:5432" \
+    postgres:16
+
+  wait_for_postgres
 }
 
 # Free app port if occupied
@@ -51,7 +76,7 @@ echo "  Installing dependencies..."
 npm install
 
 echo "  Running Prisma migrations..."
-export DATABASE_URL="postgresql://postgres:postgres@localhost:37804/klokan"
+export DATABASE_URL="postgresql://postgres:postgres@${POSTGRES_HOST}:${POSTGRES_PORT}/klokan"
 npx prisma migrate deploy
 npx prisma generate
 

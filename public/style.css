@@ -818,6 +818,23 @@ body {
 
 .claim-btn.hidden { display: none; }
 
+/* ── Manager broker assignment row ───────────────────────────── */
+.manager-assign-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.manager-assign-row.hidden { display: none; }
+.broker-assign-select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
 /* ── Version tag ──────────────────────────────────────────────── */
 .version-tag {
   font-size: 10px;

@@ -71,6 +71,10 @@
 
       <div class="broker-bottom">
         <div class="broker-status" id="brokerStatus">IA en conversation</div>
+        <div id="managerAssignSection" class="manager-assign-row hidden">
+          <select id="brokerSelect" class="broker-assign-select"></select>
+          <button id="assignBtn" class="claim-btn">Assigner</button>
+        </div>
         <div class="broker-actions">
           <button class="claim-btn hidden" id="claimBtn">Prendre en charge</button>
           <button class="intervenir-btn" id="intervenirBtn" disabled>Intervenir</button>
@@ -187,6 +191,9 @@
       const brokerStatus = document.getElementById('brokerStatus');
       const connStatus = document.getElementById('connStatus');
       const sessionListEl = document.getElementById('sessionList');
+      const managerAssignSection = document.getElementById('managerAssignSection');
+      const brokerSelect = document.getElementById('brokerSelect');
+      const assignBtn = document.getElementById('assignBtn');
 
       let ws;
       let intervening = false;
@@ -195,6 +202,7 @@
       let typingTimeout = null;
       let activeSessionId = null;
       let activeSessionData = null; // to track assignment
+      let teamBrokers = [];
 
       function connect() {
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -354,13 +362,30 @@
       function updateClaimButton() {
         if (!activeSessionData) {
           claimBtn.classList.add('hidden');
+          managerAssignSection.classList.add('hidden');
           return;
         }
-        // Show claim button if session is unassigned
-        if (!activeSessionData.assignedBrokerId) {
+        if (currentBroker?.role === 'manager') {
+          claimBtn.classList.add('hidden');
+          populateBrokerDropdown();
+          managerAssignSection.classList.remove('hidden');
+        } else if (!activeSessionData.assignedBrokerId) {
           claimBtn.classList.remove('hidden');
+          managerAssignSection.classList.add('hidden');
         } else {
           claimBtn.classList.add('hidden');
+          managerAssignSection.classList.add('hidden');
+        }
+      }
+
+      function populateBrokerDropdown() {
+        brokerSelect.innerHTML = '<option value="">— Choisir un courtier —</option>';
+        for (const b of teamBrokers) {
+          const opt = document.createElement('option');
+          opt.value = b.id;
+          opt.textContent = b.name;
+          if (b.id === activeSessionData?.assignedBrokerId) opt.selected = true;
+          brokerSelect.appendChild(opt);
         }
       }
 
@@ -397,6 +422,12 @@
         if (!activeSessionId || ws.readyState !== WebSocket.OPEN) return;
         ws.send(JSON.stringify({ type: 'broker_claim', sessionId: activeSessionId }));
         claimBtn.classList.add('hidden');
+      });
+
+      assignBtn.addEventListener('click', () => {
+        const brokerId = brokerSelect.value;
+        if (!brokerId || !activeSessionId || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify({ type: 'manager_assign_broker', sessionId: activeSessionId, brokerId }));
       });
 
       function clearSessionView() {
@@ -552,6 +583,7 @@
 
       // ── Manager team tab ──────────────────────────────────────────────────
       if (currentBroker?.role === 'manager') {
+        loadTeamBrokers();
         document.getElementById('sidebarTabs').classList.remove('hidden');
 
         document.querySelectorAll('.sidebar-tab').forEach(tab => {
@@ -591,6 +623,13 @@
             errorEl.classList.remove('hidden');
           }
         });
+      }
+
+      async function loadTeamBrokers() {
+        try {
+          const resp = await fetch('/api/manager/brokers', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (resp.ok) teamBrokers = await resp.json();
+        } catch {}
       }
 
       async function loadTeam() {

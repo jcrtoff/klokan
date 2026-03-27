@@ -11,8 +11,12 @@ ensure_postgres() {
   fi
 
   if docker ps --format '{{.Names}}' | grep -q '^klokan-postgres$'; then
-    echo "  Postgres already running."
-    return
+    if nc -z localhost 37804 2>/dev/null; then
+      echo "  Postgres already running."
+      return
+    fi
+    echo "  Postgres running but port not bound, restarting..."
+    docker restart klokan-postgres
   elif docker ps -a --format '{{.Names}}' | grep -q '^klokan-postgres$'; then
     echo "  Starting existing Postgres container..."
     docker start klokan-postgres

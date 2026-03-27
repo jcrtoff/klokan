@@ -250,6 +250,72 @@ body {
   color: var(--text-secondary);
 }
 
+/* ── Burger menu ─────────────────────────────────────────────── */
+.burger-menu {
+  position: relative;
+}
+
+.burger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.burger-btn:hover {
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.burger-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  padding: 8px 0;
+  z-index: 100;
+}
+
+.burger-name {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.burger-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0;
+}
+
+.burger-dropdown .lang-toggle {
+  padding: 4px 14px;
+}
+
+.burger-logout {
+  display: block;
+  width: 100%;
+  padding: 6px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 13px;
+  color: var(--red-text);
+  cursor: pointer;
+}
+
+.burger-logout:hover { background: var(--red-bg); }
 
 .broker-container {
   flex: 1;
@@ -458,11 +524,6 @@ body {
 
 .back-btn:hover,
 .profile-btn:hover { background: var(--bg); }
-
-.connection-status {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
 
 .broker-messages {
   flex: 1;

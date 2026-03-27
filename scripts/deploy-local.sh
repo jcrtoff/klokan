@@ -30,7 +30,7 @@ ensure_postgres() {
   fi
 
   echo "  Waiting for Postgres..."
-  until docker exec klokan-postgres pg_isready -U postgres &>/dev/null; do
+  until docker exec klokan-postgres pg_isready -U postgres &>/dev/null && nc -z localhost 37804 2>/dev/null; do
     sleep 0.5
   done
   echo "  Postgres is ready."

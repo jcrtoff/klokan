@@ -578,7 +578,7 @@
             });
             const data = await resp.json();
             if (!resp.ok) {
-              errorEl.textContent = data.error || i18n.t('connection_error');
+              errorEl.textContent = i18n.t(data.error) || i18n.t('connection_error');
               errorEl.classList.remove('hidden');
               return;
             }

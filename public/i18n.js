@@ -55,6 +55,11 @@
       no_managers:          'Aucun gestionnaire.',
       revoke_manager_confirm: "Révoquer l'accès de ce gestionnaire ?",
       revoke_error:         'Erreur lors de la révocation.',
+      email_invalid:        'Courriel invalide.',
+      name_required:        'Nom requis.',
+      email_already_registered: 'Ce courriel est déjà enregistré.',
+      internal_error:       'Erreur interne.',
+      not_found:            'Introuvable.',
       mgr_email_placeholder: 'gestionnaire@example.com',
       mgr_name_placeholder:  'Prénom Nom',
       // login.html
@@ -133,6 +138,11 @@
       no_managers:          'No managers.',
       revoke_manager_confirm: "Revoke this manager's access?",
       revoke_error:         'Error revoking access.',
+      email_invalid:        'Invalid email.',
+      name_required:        'Name is required.',
+      email_already_registered: 'This email is already registered.',
+      internal_error:       'Internal error.',
+      not_found:            'Not found.',
       mgr_email_placeholder: 'manager@example.com',
       mgr_name_placeholder:  'First Last',
       // login.html

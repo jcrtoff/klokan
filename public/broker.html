@@ -9,17 +9,24 @@
 </head>
 <body>
   <div class="broker-app">
+  <!-- Persistent top bar -->
+  <div class="app-top-bar">
+    <span class="app-brand">Klokan</span>
+    <span class="connection-status" id="connStatus">Connecté</span>
+    <div class="app-top-right">
+      <span id="brokerNameDisplay"></span>
+      <div id="langToggle" class="lang-toggle">
+        <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
+        <span class="lang-sep">|</span>
+        <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
+      </div>
+      <button id="logoutBtn" class="link-btn" data-i18n="logout">Déconnexion</button>
+    </div>
+  </div>
+
   <div class="broker-container">
     <!-- Left pane: session sidebar -->
     <div class="broker-sidebar" id="panel-sessions">
-      <div class="sidebar-header">
-        <h2 id="sidebarTitle" data-i18n="sessions">Sessions</h2>
-        <div class="broker-identity">
-          <span id="brokerNameDisplay"></span>
-          <button id="logoutBtn" class="link-btn" data-i18n="logout">Déconnexion</button>
-          <a href="/broker/clients" class="link-btn" data-i18n="clients_link">Clients →</a>
-        </div>
-      </div>
       <div class="sidebar-tabs hidden" id="sidebarTabs">
         <button class="sidebar-tab active" data-tab="sessions" data-i18n="sessions">Sessions</button>
         <button class="sidebar-tab" data-tab="team" data-i18n="my_team">Mon équipe</button>
@@ -42,17 +49,11 @@
     <!-- Center pane: conversation -->
     <div class="broker-left" id="panel-chat">
       <div class="broker-header">
-        <button id="backBtn" class="back-btn hidden" aria-label="Retour">
+        <button id="backBtn" class="back-btn" aria-label="Retour">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <h1>Klokan</h1>
-        <div id="langToggle" class="lang-toggle">
-          <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
-          <span class="lang-sep">|</span>
-          <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
-        </div>
-        <span class="connection-status" id="connStatus">Connecté</span>
-        <button id="profileBtn" class="profile-btn hidden" aria-label="Profil client">
+        <span id="chatSessionName" class="chat-session-name"></span>
+        <button id="profileBtn" class="profile-btn" aria-label="Profil client">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </button>
       </div>
@@ -143,6 +144,18 @@
   </div>
 
   </div>
+
+  <!-- Persistent bottom nav -->
+  <nav class="app-bottom-nav">
+    <button class="bottom-tab active" id="tabSessions">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span data-i18n="sessions">Sessions</span>
+    </button>
+    <a class="bottom-tab" href="/broker/clients">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span data-i18n="clients_title">Clients</span>
+    </a>
+  </nav>
 
   <script>
     // ── Language init (fast, before auth) ────────────────────────────────
@@ -428,7 +441,7 @@
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'select_session', sessionId }));
         }
-        showChat();
+        showChat(sessionData?.leadName || i18n.t('new_client'));
       }
 
       claimBtn.addEventListener('click', () => {
@@ -601,19 +614,17 @@
       const profilePanel = document.getElementById('panel-lead');
       const chatPanel = document.getElementById('panel-chat');
       const sessionsPanel = document.getElementById('panel-sessions');
+      const chatSessionName = document.getElementById('chatSessionName');
 
-      function showChat() {
+      function showChat(sessionName) {
         sessionsPanel.classList.add('view-hidden');
         chatPanel.classList.remove('view-hidden');
-        backBtn.classList.remove('hidden');
-        profileBtn.classList.remove('hidden');
+        if (sessionName) chatSessionName.textContent = sessionName;
       }
 
       function showSessions() {
         chatPanel.classList.add('view-hidden');
         sessionsPanel.classList.remove('view-hidden');
-        backBtn.classList.add('hidden');
-        profileBtn.classList.add('hidden');
         profilePanel.classList.remove('profile-open');
       }
 
@@ -623,11 +634,12 @@
 
       // Start on sessions
       chatPanel.classList.add('view-hidden');
-      profilePanel.classList.remove('profile-open');
 
       backBtn.addEventListener('click', showSessions);
       profileBtn.addEventListener('click', toggleProfile);
       closeProfileBtn.addEventListener('click', toggleProfile);
+
+      document.getElementById('tabSessions').addEventListener('click', showSessions);
 
       // ── Manager team tab ──────────────────────────────────────────────────
       if (currentBroker?.role === 'manager') {

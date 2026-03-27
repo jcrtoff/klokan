@@ -217,16 +217,85 @@ body {
 
 /* ── Broker layout ───────────────────────────────────────────── */
 .broker-app {
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
   overflow: hidden;
 }
 
-.broker-container {
+.app-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  height: 48px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-brand {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--teal);
+  margin-right: 4px;
+}
+
+.app-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.app-bottom-nav {
+  display: flex;
+  flex-shrink: 0;
+  height: 56px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-tab {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 6px 0;
+  text-decoration: none;
+}
+
+.bottom-tab.active { color: var(--teal); }
+.bottom-tab:hover { color: var(--text); }
+
+.broker-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   position: relative;
   overflow: hidden;
+}
+
+.chat-session-name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .broker-sidebar,
@@ -398,10 +467,6 @@ body {
   flex-shrink: 0;
 }
 
-.broker-header h1 {
-  font-size: 16px;
-  font-weight: 600;
-}
 
 .back-btn,
 .profile-btn {
@@ -819,20 +884,6 @@ body {
 
 .link-btn:hover { text-decoration: underline; background: none !important; }
 
-/* ── Broker identity in sidebar ──────────────────────────────── */
-.broker-identity {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.broker-identity .link-btn {
-  font-size: 11px !important;
-  margin: 0 !important;
-}
 
 /* ── Session badges ──────────────────────────────────────────── */
 .session-unassigned-badge {

@@ -934,6 +934,23 @@ body {
 
 .hidden { display: none !important; }
 
+/* ── Desktop: centred column with whitespace ─────────────────── */
+@media (min-width: 640px) {
+  body {
+    background: #E0E4EC;
+  }
+
+  .chat-container {
+    box-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,.08);
+  }
+
+  .broker-app {
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,.08);
+  }
+}
+
 .link-btn {
   background: none !important;
   color: var(--teal-600) !important;

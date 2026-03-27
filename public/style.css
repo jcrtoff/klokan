@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&display=swap');
+
 :root {
   --bg:             #F5F7FA;
   --surface:        #ffffff;
@@ -29,6 +31,19 @@
 
   --radius-md:      8px;
   --radius-lg:      12px;
+}
+
+/* ── Brand wordmark ──────────────────────────────────────────── */
+.brand-klokan,
+.app-brand,
+.login-card h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(90deg, var(--teal-600), var(--cta-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -250,8 +265,6 @@ body {
 
 .app-brand {
   font-size: 15px;
-  font-weight: 700;
-  color: var(--teal);
   margin-right: 4px;
 }
 

@@ -36,8 +36,9 @@ ensure_postgres() {
   echo "  Postgres is ready."
 }
 
-# Free port 3000 if occupied
+# Free ports if occupied
 lsof -ti :3000 | xargs kill 2>/dev/null || true
+lsof -ti :37804 | xargs kill 2>/dev/null || true
 
 echo "▶ Starting Klokan (local dev)"
 echo "  Doppler: ${DOPPLER_PROJECT}/${DOPPLER_CONFIG}"

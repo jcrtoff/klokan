@@ -1006,7 +1006,7 @@ body {
 }
 
 .team-form {
-  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   padding: 12px 14px;
   display: flex;
   flex-direction: column;

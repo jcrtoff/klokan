@@ -14,6 +14,7 @@
     <span class="app-brand">Klokan</span>
     <span class="connection-status" id="connStatus">Connecté</span>
     <div class="app-top-right">
+      <a id="clientsLink" href="/broker/clients" class="link-btn hidden" data-i18n="clients_link">Clients →</a>
       <span id="brokerNameDisplay"></span>
       <div id="langToggle" class="lang-toggle">
         <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
@@ -145,18 +146,6 @@
 
   </div>
 
-  <!-- Persistent bottom nav -->
-  <nav class="app-bottom-nav">
-    <button class="bottom-tab active" id="tabSessions">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      <span data-i18n="sessions">Sessions</span>
-    </button>
-    <a class="bottom-tab" href="/broker/clients">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span data-i18n="clients_title">Clients</span>
-    </a>
-  </nav>
-
   <script>
     // ── Language init (fast, before auth) ────────────────────────────────
     i18n.init();
@@ -187,6 +176,9 @@
         currentBroker = await resp.json();
         localStorage.setItem('klokan_broker', JSON.stringify(currentBroker));
         document.getElementById('brokerNameDisplay').textContent = currentBroker.name;
+        if (currentBroker.role !== 'manager') {
+          document.getElementById('clientsLink').classList.remove('hidden');
+        }
         if (currentBroker.language) {
           i18n.setLang(currentBroker.language);
         }
@@ -638,8 +630,6 @@
       backBtn.addEventListener('click', showSessions);
       profileBtn.addEventListener('click', toggleProfile);
       closeProfileBtn.addEventListener('click', toggleProfile);
-
-      document.getElementById('tabSessions').addEventListener('click', showSessions);
 
       // ── Manager team tab ──────────────────────────────────────────────────
       if (currentBroker?.role === 'manager') {

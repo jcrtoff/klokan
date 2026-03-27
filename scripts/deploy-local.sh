@@ -11,17 +11,14 @@ ensure_postgres() {
   fi
 
   if docker ps --format '{{.Names}}' | grep -q '^klokan-postgres$'; then
-    if nc -z localhost 37804 2>/dev/null; then
-      echo "  Postgres already running."
-      return
-    fi
-    echo "  Postgres running but port not bound, restarting..."
-    docker restart klokan-postgres
+    echo "  Postgres already running."
+    return
   elif docker ps -a --format '{{.Names}}' | grep -q '^klokan-postgres$'; then
     echo "  Starting existing Postgres container..."
     docker start klokan-postgres
   else
     echo "  Creating Postgres container..."
+    lsof -ti :37804 | xargs kill 2>/dev/null || true
     docker run -d \
       --name klokan-postgres \
       -e POSTGRES_USER=postgres \
@@ -38,9 +35,8 @@ ensure_postgres() {
   echo "  Postgres is ready."
 }
 
-# Free ports if occupied
+# Free app port if occupied
 lsof -ti :3000 | xargs kill 2>/dev/null || true
-lsof -ti :37804 | xargs kill 2>/dev/null || true
 
 echo "▶ Starting Klokan (local dev)"
 echo "  Doppler: ${DOPPLER_PROJECT}/${DOPPLER_CONFIG}"

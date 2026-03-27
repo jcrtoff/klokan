@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clients — Klokan</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
+  <style>
+    .clients-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .clients-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .clients-header h1 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .clients-header .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .clients-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .clients-search {
+      flex: 1;
+      max-width: 320px;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: var(--bg);
+      outline: none;
+      color: var(--text-primary);
+    }
+
+    .clients-search:focus { border-color: var(--teal-600); }
+
+    .clients-score-filter {
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: var(--bg);
+      cursor: pointer;
+      outline: none;
+      color: var(--text-primary);
+    }
+
+    .clients-count {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    .clients-table-wrapper {
+      flex: 1;
+      overflow-x: auto;
+      padding: 24px;
+    }
+
+    .clients-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .clients-table thead th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .clients-table thead th:hover { color: var(--text-primary); }
+    .clients-table thead th.sort-asc::after  { content: ' ↑'; }
+    .clients-table thead th.sort-desc::after { content: ' ↓'; }
+
+    .clients-table tbody tr {
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s ease;
+    }
+
+    .clients-table tbody tr:last-child { border-bottom: none; }
+    .clients-table tbody tr:hover { background: var(--teal-50, #f0fdfa); }
+
+    .clients-table td {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .clients-table td.muted { color: var(--text-secondary); }
+
+    .score-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .clients-empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .back-link {
+      font-size: 13px;
+      color: var(--teal-600);
+      text-decoration: none;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+
+    .broker-name-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="clients-page">
+
+    <div class="clients-header">
+      <a href="/broker" class="back-link" data-i18n="back_to_dashboard">← Tableau de bord</a>
+      <h1 data-i18n="clients_title">Clients</h1>
+      <div class="header-right">
+        <span id="brokerNameDisplay" class="broker-name-label"></span>
+        <button id="logoutBtn" class="link-btn" data-i18n="logout">Déconnexion</button>
+        <div id="langToggle" class="lang-toggle">
+          <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
+          <span class="lang-sep">|</span>
+          <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="clients-toolbar">
+      <input
+        type="search"
+        id="searchInput"
+        class="clients-search"
+        data-i18n="search_placeholder"
+        data-i18n-target="placeholder"
+        placeholder="Rechercher par nom ou courriel…"
+      >
+      <select id="scoreFilter" class="clients-score-filter">
+        <option value="" data-i18n="filter_all">Tous les scores</option>
+        <option value="chaud" data-i18n="score_chaud">Chaud</option>
+        <option value="tiède" data-i18n="score_tiede">Tiède</option>
+        <option value="froid" data-i18n="score_froid">Froid</option>
+      </select>
+      <span class="clients-count" id="clientsCount"></span>
+    </div>
+
+    <div class="clients-table-wrapper">
+      <div id="loadingMsg" class="clients-empty" data-i18n="loading">Chargement…</div>
+      <table class="clients-table hidden" id="clientsTable">
+        <thead>
+          <tr>
+            <th data-col="leadName"      data-i18n="col_name">Nom</th>
+            <th data-col="leadScore"     data-i18n="col_score">Score</th>
+            <th data-col="budget"        data-i18n="col_budget">Budget</th>
+            <th data-col="neighbourhood" data-i18n="col_neighbourhood">Quartier</th>
+            <th data-col="projectType"   data-i18n="col_project">Type de projet</th>
+            <th data-col="lastActivity"  data-i18n="col_last_activity">Dernière activité</th>
+            <th data-col="messageCount"  data-i18n="col_msgs">Msgs</th>
+          </tr>
+        </thead>
+        <tbody id="clientsBody"></tbody>
+      </table>
+      <div class="clients-empty hidden" id="emptyMsg" data-i18n="no_clients">Aucun client trouvé.</div>
+    </div>
+
+  </div>
+
+  <script>
+    i18n.init();
+
+    function switchLang(lang) {
+      i18n.setLang(lang);
+      const t = localStorage.getItem('klokan_token');
+      if (t) {
+        fetch('/api/auth/settings', {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${t}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: lang })
+        }).catch(() => {});
+      }
+    }
+
+    // ── Auth ──────────────────────────────────────────────────────────────
+    const token = localStorage.getItem('klokan_token');
+    if (!token) { window.location.href = '/broker/login'; }
+
+    (async () => {
+      try {
+        const resp = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!resp.ok) throw new Error();
+        const broker = await resp.json();
+        localStorage.setItem('klokan_broker', JSON.stringify(broker));
+        document.getElementById('brokerNameDisplay').textContent = broker.name;
+        if (broker.language) i18n.setLang(broker.language);
+      } catch {
+        localStorage.removeItem('klokan_token');
+        localStorage.removeItem('klokan_broker');
+        window.location.href = '/broker/login';
+        return;
+      }
+      await loadClients();
+    })();
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('klokan_token');
+      localStorage.removeItem('klokan_broker');
+      window.location.href = '/broker/login';
+    });
+
+    // ── Data & sort state ─────────────────────────────────────────────────
+    let allClients = [];
+    let sortCol = 'lastActivity';
+    let sortDir = 'desc';
+
+    async function loadClients() {
+      try {
+        const resp = await fetch('/api/clients', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!resp.ok) throw new Error();
+        allClients = await resp.json();
+        document.getElementById('loadingMsg').classList.add('hidden');
+        document.getElementById('clientsTable').classList.remove('hidden');
+        applySort('lastActivity', 'desc');
+        render();
+      } catch {
+        document.getElementById('loadingMsg').textContent = i18n.t('load_error');
+      }
+    }
+
+    // ── Sort ──────────────────────────────────────────────────────────────
+    const SCORE_ORDER = { chaud: 3, 'tiède': 2, tiede: 2, froid: 1 };
+
+    function applySort(col, dir) {
+      sortCol = col;
+      sortDir = dir;
+
+      document.querySelectorAll('.clients-table thead th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.col === col) th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      });
+
+      allClients.sort((a, b) => {
+        let va = a[col];
+        let vb = b[col];
+
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1;
+        if (vb == null) return -1;
+
+        if (col === 'leadScore') {
+          const oa = SCORE_ORDER[va.toLowerCase()] ?? 0;
+          const ob = SCORE_ORDER[vb.toLowerCase()] ?? 0;
+          return dir === 'asc' ? oa - ob : ob - oa;
+        }
+
+        if (typeof va === 'number' && typeof vb === 'number') {
+          return dir === 'asc' ? va - vb : vb - va;
+        }
+
+        const sa = String(va).toLowerCase();
+        const sb = String(vb).toLowerCase();
+        if (sa < sb) return dir === 'asc' ? -1 : 1;
+        if (sa > sb) return dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    document.querySelectorAll('.clients-table thead th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        const newDir = (sortCol === col && sortDir === 'asc') ? 'desc' : 'asc';
+        applySort(col, newDir);
+        render();
+      });
+    });
+
+    // ── Filter ────────────────────────────────────────────────────────────
+    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('scoreFilter').addEventListener('change', render);
+
+    function getFiltered() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const scoreVal = document.getElementById('scoreFilter').value.toLowerCase();
+
+      return allClients.filter(c => {
+        if (scoreVal) {
+          const cs = (c.leadScore || '').toLowerCase();
+          const normalized = (cs === 'tiede') ? 'tiède' : cs;
+          if (normalized !== scoreVal) return false;
+        }
+        if (q) {
+          const name  = (c.leadName || '').toLowerCase();
+          const email = (c.email    || '').toLowerCase();
+          if (!name.includes(q) && !email.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────
+    function render() {
+      const filtered = getFiltered();
+      const tbody    = document.getElementById('clientsBody');
+      const emptyMsg = document.getElementById('emptyMsg');
+      const countEl  = document.getElementById('clientsCount');
+
+      countEl.textContent = filtered.length + ' / ' + allClients.length;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyMsg.classList.remove('hidden');
+        return;
+      }
+
+      emptyMsg.classList.add('hidden');
+      tbody.innerHTML = '';
+
+      const lang = i18n.getLang();
+
+      for (const c of filtered) {
+        const tr = document.createElement('tr');
+
+        const score = (c.leadScore || '').toLowerCase();
+        const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : (score || '');
+        const scoreLabel = score
+          ? score.charAt(0).toUpperCase() + score.slice(1)
+          : '—';
+
+        const lastActivity = c.lastActivity
+          ? new Date(c.lastActivity).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', {
+              month: 'short', day: 'numeric', year: 'numeric'
+            })
+          : '—';
+
+        tr.innerHTML =
+          '<td><strong>' + esc(c.leadName || i18n.t('new_client')) + '</strong></td>' +
+          '<td><div class="score-cell">' +
+            (scoreClass ? '<span class="session-score-dot ' + scoreClass + '"></span>' : '') +
+            '<span>' + esc(scoreLabel) + '</span>' +
+          '</div></td>' +
+          '<td class="muted">' + esc(c.budget        || '—') + '</td>' +
+          '<td class="muted">' + esc(c.neighbourhood  || '—') + '</td>' +
+          '<td class="muted">' + esc(c.projectType    || '—') + '</td>' +
+          '<td class="muted">' + lastActivity + '</td>' +
+          '<td class="muted">' + c.messageCount + '</td>';
+
+        tr.addEventListener('click', () => {
+          window.location.href = '/broker?session=' + encodeURIComponent(c.id);
+        });
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

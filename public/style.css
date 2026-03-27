@@ -215,10 +215,8 @@ body {
 .input-bar button:hover { background: var(--teal-800); }
 .input-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Broker layout (tab-based) ───────────────────────────────── */
+/* ── Broker layout ───────────────────────────────────────────── */
 .broker-app {
-  display: flex;
-  flex-direction: column;
   height: 100dvh;
   overflow: hidden;
 }
@@ -226,48 +224,21 @@ body {
 .broker-container {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
+  position: relative;
   overflow: hidden;
 }
 
 .broker-sidebar,
-.broker-left,
-.broker-right {
+.broker-left {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-}
-
-.tab-hidden { display: none !important; }
-
-.tab-bar {
-  display: flex;
-  flex-shrink: 0;
-  height: 56px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.tab-btn {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border: none;
-  background: none;
-  color: var(--text-secondary);
-  font-size: 11px;
-  cursor: pointer;
-  transition: color 0.15s;
-  padding: 6px 0;
 }
 
-.tab-btn.active { color: var(--teal); }
-.tab-btn:hover { color: var(--text); }
+.view-hidden { display: none !important; }
 
 /* ── Session sidebar ────────────────────────────────────────── */
 .broker-sidebar {
@@ -380,16 +351,42 @@ body {
 }
 
 .broker-left {
-  display: flex;
-  flex-direction: column;
   background: var(--bg);
 }
 
 .broker-right {
+  position: absolute;
+  inset: 0;
   background: var(--surface);
   padding: 24px;
   overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 10;
 }
+
+.broker-right.profile-open {
+  transform: translateX(0);
+}
+
+.close-profile-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.15s;
+}
+
+.close-profile-btn:hover { background: var(--bg); }
 
 .broker-header {
   display: flex;
@@ -405,6 +402,25 @@ body {
   font-size: 16px;
   font-weight: 600;
 }
+
+.back-btn,
+.profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.back-btn:hover,
+.profile-btn:hover { background: var(--bg); }
 
 .connection-status {
   font-size: 13px;

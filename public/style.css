@@ -215,18 +215,64 @@ body {
 .input-bar button:hover { background: var(--teal-800); }
 .input-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Broker layout ───────────────────────────────────────────── */
-.broker-container {
-  display: grid;
-  grid-template-columns: 220px 1fr 340px;
-  height: 100vh;
+/* ── Broker layout (tab-based) ───────────────────────────────── */
+.broker-app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
 }
+
+.broker-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.broker-sidebar,
+.broker-left,
+.broker-right {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.tab-hidden { display: none !important; }
+
+.tab-bar {
+  display: flex;
+  flex-shrink: 0;
+  height: 56px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 6px 0;
+}
+
+.tab-btn.active { color: var(--teal); }
+.tab-btn:hover { color: var(--text); }
 
 /* ── Session sidebar ────────────────────────────────────────── */
 .broker-sidebar {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border);
   background: var(--surface);
   overflow: hidden;
 }
@@ -336,7 +382,6 @@ body {
 .broker-left {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border);
   background: var(--bg);
 }
 
@@ -368,6 +413,7 @@ body {
 
 .broker-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px 20px;
   display: flex;

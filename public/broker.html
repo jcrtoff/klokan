@@ -8,9 +8,10 @@
   <script src="/i18n.js"></script>
 </head>
 <body>
+  <div class="broker-app">
   <div class="broker-container">
     <!-- Left pane: session sidebar -->
-    <div class="broker-sidebar">
+    <div class="broker-sidebar" id="panel-sessions">
       <div class="sidebar-header">
         <h2 id="sidebarTitle" data-i18n="sessions">Sessions</h2>
         <div class="broker-identity">
@@ -39,7 +40,7 @@
     </div>
 
     <!-- Center pane: conversation -->
-    <div class="broker-left">
+    <div class="broker-left" id="panel-chat">
       <div class="broker-header">
         <h1>Klokan</h1>
         <div id="langToggle" class="lang-toggle">
@@ -87,7 +88,7 @@
     </div>
 
     <!-- Right pane: lead profile -->
-    <div class="broker-right">
+    <div class="broker-right" id="panel-lead">
       <div class="lead-card">
         <div class="lead-avatar" id="avatar">—</div>
         <div class="lead-name" id="leadName">Client inconnu</div>
@@ -130,6 +131,22 @@
       </div>
       <div class="version-tag" id="versionTag"></div>
     </div>
+  </div>
+
+  <nav class="tab-bar" role="tablist" aria-label="Navigation">
+    <button class="tab-btn active" data-panel="sessions" role="tab" aria-selected="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span data-i18n="tab_sessions">Sessions</span>
+    </button>
+    <button class="tab-btn" data-panel="chat" role="tab" aria-selected="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span data-i18n="tab_chat">Chat</span>
+    </button>
+    <button class="tab-btn" data-panel="lead" role="tab" aria-selected="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span data-i18n="tab_lead">Profil</span>
+    </button>
+  </nav>
   </div>
 
   <script>
@@ -416,6 +433,7 @@
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'select_session', sessionId }));
         }
+        activateTab('chat');
       }
 
       claimBtn.addEventListener('click', () => {
@@ -580,6 +598,27 @@
       });
 
       connect();
+
+      // ── Tab navigation ────────────────────────────────────────────────────
+      const PANEL_IDS = { sessions: 'panel-sessions', chat: 'panel-chat', lead: 'panel-lead' };
+
+      function activateTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          const active = btn.dataset.panel === name;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-selected', String(active));
+        });
+        for (const [key, id] of Object.entries(PANEL_IDS)) {
+          const el = document.getElementById(id);
+          if (el) el.classList.toggle('tab-hidden', key !== name);
+        }
+      }
+
+      activateTab('sessions');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.panel));
+      });
 
       // ── Manager team tab ──────────────────────────────────────────────────
       if (currentBroker?.role === 'manager') {

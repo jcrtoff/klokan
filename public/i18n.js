@@ -44,6 +44,9 @@
       revoke_confirm:       "Révoquer l'accès de ce courtier ?",
       broker_badge:         'Courtier',
       unassigned_badge:     'Non assigné',
+      tab_sessions:         'Sessions',
+      tab_chat:             'Chat',
+      tab_lead:             'Profil',
       // admin.html
       managers:             'Gestionnaires',
       add_manager:          'Ajouter un gestionnaire',
@@ -144,6 +147,9 @@
       revoke_confirm:       "Revoke this broker's access?",
       broker_badge:         'Broker',
       unassigned_badge:     'Unassigned',
+      tab_sessions:         'Sessions',
+      tab_chat:             'Chat',
+      tab_lead:             'Profile',
       // admin.html
       managers:             'Managers',
       add_manager:          'Add a manager',

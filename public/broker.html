@@ -110,20 +110,9 @@
         <div class="burger-dropdown hidden" id="burgerDropdown">
           <div class="burger-name" id="brokerNameDisplay"></div>
           <div class="burger-divider"></div>
-          <div class="lang-toggle" id="langToggle">
-            <button data-lang="fr" class="lang-btn lang-active" onclick="switchLang('fr')">FR</button>
-            <span class="lang-sep">|</span>
-            <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
-          </div>
-          <div class="burger-divider"></div>
+          <button id="settingsBtn" class="burger-embed-btn" data-i18n="settings">Paramètres</button>
           <button id="embedBtn" class="burger-embed-btn">Partager &amp; Intégrer</button>
-          <div class="burger-divider"></div>
-          <div class="burger-limits">
-            <div class="burger-limits-title" data-i18n="limits_title">Limites de la conversation</div>
-            <div class="burger-limits-row"><span data-i18n="limits_rate">Débit</span><span>5 msg / min</span></div>
-            <div class="burger-limits-row"><span data-i18n="limits_length">Longueur</span><span>800 car.</span></div>
-            <div class="burger-limits-row"><span data-i18n="limits_cost">Coût max</span><span>$2.00 / session</span></div>
-          </div>
+          <button id="limitsBtn" class="burger-embed-btn" data-i18n="menu_limits">Limites</button>
           <div class="burger-divider"></div>
           <button id="logoutBtn" class="burger-logout" data-i18n="logout">Déconnexion</button>
         </div>
@@ -274,6 +263,43 @@
     </div>
   </div>
 
+  <!-- Settings modal -->
+  <div class="embed-modal-overlay hidden" id="settingsModalOverlay">
+    <div class="embed-modal" style="max-width: 340px;">
+      <div class="embed-modal-header">
+        <span data-i18n="settings">Paramètres</span>
+        <button class="embed-modal-close" id="settingsModalClose" aria-label="Fermer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="embed-section">
+        <div class="embed-section-label" data-i18n="settings_lang">Langue</div>
+        <div class="lang-toggle" id="langToggle">
+          <button data-lang="fr" class="lang-btn" onclick="switchLang('fr')">FR</button>
+          <span class="lang-sep">|</span>
+          <button data-lang="en" class="lang-btn" onclick="switchLang('en')">EN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Limits modal -->
+  <div class="embed-modal-overlay hidden" id="limitsModalOverlay">
+    <div class="embed-modal" style="max-width: 340px;">
+      <div class="embed-modal-header">
+        <span data-i18n="limits_title">Limites de la conversation</span>
+        <button class="embed-modal-close" id="limitsModalClose" aria-label="Fermer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="burger-limits" style="padding: 0;">
+        <div class="burger-limits-row"><span data-i18n="limits_rate">Débit</span><span>5 msg / min</span></div>
+        <div class="burger-limits-row"><span data-i18n="limits_length">Longueur</span><span>800 car.</span></div>
+        <div class="burger-limits-row"><span data-i18n="limits_cost">Coût max</span><span>$2.00 / session</span></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ── Language init (fast, before auth) ────────────────────────────────
     i18n.init();
@@ -307,7 +333,7 @@
         if (currentBroker.role !== 'manager') {
           document.getElementById('clientsLink').classList.remove('hidden');
         }
-        if (currentBroker.language) {
+        if (currentBroker.language && !localStorage.getItem('klokan_language')) {
           i18n.setLang(currentBroker.language);
         }
       } catch {
@@ -367,6 +393,32 @@
     }
     setupCopyBtn('copyLinkBtn', 'embedLinkDisplay');
     setupCopyBtn('copySnippetBtn', 'embedSnippetDisplay');
+
+    // ── Settings modal ────────────────────────────────────────────────────
+    const settingsModalOverlay = document.getElementById('settingsModalOverlay');
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      settingsModalOverlay.classList.remove('hidden');
+      burgerDropdown.classList.add('hidden');
+    });
+    document.getElementById('settingsModalClose').addEventListener('click', () => {
+      settingsModalOverlay.classList.add('hidden');
+    });
+    settingsModalOverlay.addEventListener('click', (e) => {
+      if (e.target === settingsModalOverlay) settingsModalOverlay.classList.add('hidden');
+    });
+
+    // ── Limits modal ──────────────────────────────────────────────────────
+    const limitsModalOverlay = document.getElementById('limitsModalOverlay');
+    document.getElementById('limitsBtn').addEventListener('click', () => {
+      limitsModalOverlay.classList.remove('hidden');
+      burgerDropdown.classList.add('hidden');
+    });
+    document.getElementById('limitsModalClose').addEventListener('click', () => {
+      limitsModalOverlay.classList.add('hidden');
+    });
+    limitsModalOverlay.addEventListener('click', (e) => {
+      if (e.target === limitsModalOverlay) limitsModalOverlay.classList.add('hidden');
+    });
 
     // ── App init (after auth) ─────────────────────────────────────────────
     function initApp() {

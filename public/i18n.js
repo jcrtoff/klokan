@@ -65,6 +65,10 @@
       not_found:            'Introuvable.',
       mgr_email_placeholder: 'gestionnaire@example.com',
       mgr_name_placeholder:  'Prénom Nom',
+      // broker.html – burger menu
+      settings:             'Paramètres',
+      settings_lang:        'Langue',
+      menu_limits:          'Limites',
       // broker.html – abuse limits
       limits_title:         'Limites de la conversation',
       limits_rate:          'Débit',
@@ -155,6 +159,10 @@
       tab_sessions:         'Sessions',
       tab_chat:             'Chat',
       tab_lead:             'Profile',
+      // broker.html – burger menu
+      settings:             'Settings',
+      settings_lang:        'Language',
+      menu_limits:          'Limits',
       // broker.html – abuse limits
       limits_title:         'Conversation limits',
       limits_rate:          'Rate',

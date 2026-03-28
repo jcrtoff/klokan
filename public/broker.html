@@ -635,8 +635,6 @@
             badge = `<span class="session-broker-badge">${i18n.t('broker_badge')}</span>`;
           } else if (!s.assignedBrokerId) {
             badge = `<span class="session-unassigned-badge">${i18n.t('unassigned_badge')}</span>`;
-          } else if (s.assignedBrokerName) {
-            badge = '<span class="session-assigned-badge">' + escapeHtml(s.assignedBrokerName) + '</span>';
           }
 
           // Profile details line
@@ -645,22 +643,25 @@
             ? '<div class="session-item-details">' + details.join(' · ') + '</div>'
             : '';
 
-          // Last message preview
+          // Last message preview with message count
           const lastMsgHtml = s.lastMessage
-            ? '<div class="session-item-preview">' + escapeHtml(s.lastMessage) + '</div>'
+            ? '<div class="session-item-preview"><span class="session-item-label">' + i18n.t('last_message_label') + '</span> ' + escapeHtml(s.lastMessage) + ' (' + s.messageCount + ' msg)</div>'
+            : '<div class="session-item-preview">(' + s.messageCount + ' msg)</div>';
+
+          // Assigned broker line
+          const brokerLine = s.assignedBrokerName
+            ? '<div class="session-item-broker"><span class="session-item-label">' + i18n.t('assigned_broker_label') + '</span> ' + escapeHtml(s.assignedBrokerName) + '</div>'
             : '';
 
           item.innerHTML =
             '<div class="session-item-top">' +
               '<span class="session-score-dot ' + scoreClass + '"></span>' +
               '<span class="session-name">' + escapeHtml(name) + '</span>' +
+              badge +
             '</div>' +
             detailsHtml +
             lastMsgHtml +
-            '<div class="session-item-bottom">' +
-              '<span class="session-msg-count">' + s.messageCount + ' msg</span>' +
-              badge +
-            '</div>';
+            brokerLine;
 
           item.addEventListener('click', () => selectSession(s.id, s));
           sessionListEl.appendChild(item);

@@ -295,7 +295,6 @@
         <div class="label" data-i18n="ai_notes">Notes IA</div>
         <div class="value" id="notesValue">Aucune note pour le moment.</div>
       </div>
-      <div class="version-tag" id="versionTag"></div>
     </div>
   </div>
 
@@ -1160,10 +1159,12 @@
         }
       }
 
-      fetch('/api/version').then(r => r.json()).then(d => {
-        document.getElementById('versionTag').textContent = d.sha;
-      }).catch(() => {});
     }
+
+    fetch('/api/version').then(r => r.json()).then(d => {
+      document.getElementById('versionTag').textContent = d.sha;
+    }).catch(() => {});
   </script>
+  <div class="version-tag" id="versionTag" style="position:fixed;bottom:0;left:0;right:0;z-index:1;"></div>
 </body>
 </html>

@@ -163,6 +163,40 @@
       </form>
       <div class="form-error hidden" id="formError"></div>
     </div>
+
+    <div class="admin-section">
+      <h2 data-i18n="solo_brokers">Courtiers solo</h2>
+      <table class="admin-table" id="brokersTable">
+        <thead>
+          <tr>
+            <th data-i18n="name_label">Nom</th>
+            <th data-i18n="email_label">Courriel</th>
+            <th data-i18n="status">Statut</th>
+            <th data-i18n="last_login">Dernière connexion</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="brokersBody">
+          <tr class="empty-row"><td colspan="5" data-i18n="loading">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="admin-section">
+      <h2 data-i18n="add_solo_broker">Ajouter un courtier solo</h2>
+      <form class="admin-form" id="addBrokerForm" autocomplete="off">
+        <div class="field">
+          <label for="brEmail" data-i18n="email_label">Courriel</label>
+          <input type="email" id="brEmail" placeholder="courtier@example.com" data-i18n="broker_email_placeholder" data-i18n-target="placeholder" required>
+        </div>
+        <div class="field">
+          <label for="brName" data-i18n="name_label">Nom</label>
+          <input type="text" id="brName" placeholder="Prénom Nom" data-i18n="broker_name_placeholder" data-i18n-target="placeholder" required>
+        </div>
+        <button type="submit" id="addBrokerBtn" data-i18n="add_btn">Ajouter</button>
+      </form>
+      <div class="form-error hidden" id="brokerFormError"></div>
+    </div>
   </div>
 
   <script>
@@ -203,6 +237,7 @@
         return;
       }
       loadManagers();
+      loadBrokers();
     })();
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -266,6 +301,82 @@
         alert(i18n.t('revoke_error'));
       }
     }
+
+    async function loadBrokers() {
+      try {
+        const resp = await fetch('/api/admin/brokers', { headers: { 'Authorization': `Bearer ${token}` } });
+        const brokers = await resp.json();
+        renderBrokers(brokers);
+      } catch {
+        document.getElementById('brokersBody').innerHTML =
+          `<tr class="empty-row"><td colspan="5">${i18n.t('load_error')}</td></tr>`;
+      }
+    }
+
+    function renderBrokers(brokers) {
+      const tbody = document.getElementById('brokersBody');
+      if (brokers.length === 0) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${i18n.t('no_solo_brokers')}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = brokers.map(b => `
+        <tr data-id="${b.id}">
+          <td>${escapeHtml(b.name)}</td>
+          <td class="muted">${escapeHtml(b.email)}</td>
+          <td>${b.authorized ? `<span class="badge-authorized">${i18n.t('active')}</span>` : `<span class="badge-revoked">${i18n.t('revoked')}</span>`}</td>
+          <td class="muted">${formatDate(b.lastLogin)}</td>
+          <td>${b.authorized ? `<button class="revoke-btn" data-id="${b.id}">${i18n.t('revoke')}</button>` : ''}</td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('.revoke-btn').forEach(btn => {
+        btn.addEventListener('click', () => revokeBroker(btn.dataset.id));
+      });
+    }
+
+    async function revokeBroker(id) {
+      if (!confirm(i18n.t('revoke_broker_confirm'))) return;
+      try {
+        await fetch(`/api/admin/brokers/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadBrokers();
+      } catch {
+        alert(i18n.t('revoke_error'));
+      }
+    }
+
+    document.getElementById('addBrokerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('brokerFormError');
+      errorEl.classList.add('hidden');
+      const email = document.getElementById('brEmail').value.trim();
+      const name = document.getElementById('brName').value.trim();
+      const addBtn = document.getElementById('addBrokerBtn');
+      addBtn.disabled = true;
+      try {
+        const resp = await fetch('/api/admin/brokers', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          errorEl.textContent = i18n.t(data.error) || i18n.t('connection_error');
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        document.getElementById('brEmail').value = '';
+        document.getElementById('brName').value = '';
+        loadBrokers();
+      } catch {
+        errorEl.textContent = i18n.t('connection_error');
+        errorEl.classList.remove('hidden');
+      } finally {
+        addBtn.disabled = false;
+      }
+    });
 
     document.getElementById('addManagerForm').addEventListener('submit', async (e) => {
       e.preventDefault();

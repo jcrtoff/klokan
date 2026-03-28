@@ -148,6 +148,12 @@
         <button class="sidebar-tab" data-tab="clients" data-i18n="clients_tab">Clients</button>
         <button class="sidebar-tab hidden" data-tab="team" id="teamTab" data-i18n="team">Équipe</button>
       </div>
+      <div class="session-sort-chips" id="sessionSortChips">
+        <button class="sort-chip active" data-sort="lastActivity" data-i18n="sort_recent">Récent ↓</button>
+        <button class="sort-chip" data-sort="leadScore" data-i18n="sort_score">Score</button>
+        <button class="sort-chip" data-sort="budget" data-i18n="sort_budget">Budget</button>
+        <button class="sort-chip" data-sort="messageCount" data-i18n="sort_messages">Messages</button>
+      </div>
       <div class="session-list" id="sessionList">
         <div class="session-empty" data-i18n="no_active_session">Aucune session active</div>
       </div>
@@ -566,6 +572,71 @@
       let activeSessionId = null;
       let activeSessionData = null; // to track assignment
       let teamBrokers = [];
+      let allSessions = [];
+
+      // Session sort state — restore from localStorage
+      const SCORE_ORDER = { chaud: 3, 'tiède': 2, tiede: 2, froid: 1 };
+      let sessionSortCol = 'lastActivity';
+      let sessionSortDir = 'desc';
+      try {
+        const saved = JSON.parse(localStorage.getItem('klokan-session-sort'));
+        if (saved?.col && saved?.dir) { sessionSortCol = saved.col; sessionSortDir = saved.dir; }
+      } catch {}
+
+      function sortSessions(sessions) {
+        return sessions.slice().sort((a, b) => {
+          let va = a[sessionSortCol], vb = b[sessionSortCol];
+          if (va == null && vb == null) return 0;
+          if (va == null) return 1;
+          if (vb == null) return -1;
+          if (sessionSortCol === 'leadScore') {
+            const sa = SCORE_ORDER[String(va).toLowerCase()] ?? 0;
+            const sb = SCORE_ORDER[String(vb).toLowerCase()] ?? 0;
+            return sessionSortDir === 'asc' ? sa - sb : sb - sa;
+          }
+          if (typeof va === 'number' && typeof vb === 'number') {
+            return sessionSortDir === 'asc' ? va - vb : vb - va;
+          }
+          const sa = String(va).toLowerCase(), sb = String(vb).toLowerCase();
+          if (sa < sb) return sessionSortDir === 'asc' ? -1 : 1;
+          if (sa > sb) return sessionSortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      function sortAndRenderSessions() {
+        renderSessionList(sortSessions(allSessions));
+      }
+
+      function updateSortChips() {
+        document.querySelectorAll('#sessionSortChips .sort-chip').forEach(btn => {
+          const isActive = btn.dataset.sort === sessionSortCol;
+          btn.classList.toggle('active', isActive);
+          const label = i18n.t({
+            lastActivity: 'sort_recent', leadScore: 'sort_score',
+            budget: 'sort_budget', messageCount: 'sort_messages'
+          }[btn.dataset.sort]);
+          btn.textContent = isActive ? label + (sessionSortDir === 'desc' ? ' ↓' : ' ↑') : label;
+        });
+      }
+
+      document.querySelectorAll('#sessionSortChips .sort-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const col = btn.dataset.sort;
+          if (sessionSortCol === col) {
+            sessionSortDir = sessionSortDir === 'desc' ? 'asc' : 'desc';
+          } else {
+            sessionSortCol = col;
+            sessionSortDir = 'desc';
+          }
+          localStorage.setItem('klokan-session-sort', JSON.stringify({ col: sessionSortCol, dir: sessionSortDir }));
+          updateSortChips();
+          sortAndRenderSessions();
+        });
+      });
+
+      // Apply initial chip state
+      updateSortChips();
 
       function connect() {
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -586,7 +657,8 @@
               break;
 
             case 'session_list':
-              renderSessionList(msg.sessions);
+              allSessions = msg.sessions;
+              sortAndRenderSessions();
               break;
 
             case 'session_closed':

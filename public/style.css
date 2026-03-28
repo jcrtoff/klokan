@@ -471,6 +471,38 @@ body {
   color: var(--text-secondary);
 }
 
+.session-sort-chips {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sort-chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sort-chip:hover {
+  border-color: var(--teal-600);
+  color: var(--teal-600);
+}
+
+.sort-chip.active {
+  background: var(--teal-50);
+  border-color: var(--teal-600);
+  color: var(--teal-600);
+  font-weight: 600;
+}
+
 .session-list {
   flex: 1;
   overflow-y: auto;

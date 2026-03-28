@@ -76,6 +76,10 @@
       broker_email_placeholder: 'courtier@example.com',
       broker_name_placeholder:  'Prénom Nom',
       to_assign_badge:       'À assigner',
+      sort_recent:           'Récent',
+      sort_score:            'Score',
+      sort_budget:           'Budget',
+      sort_messages:         'Messages',
       // broker.html – burger menu
       settings:             'Paramètres',
       settings_lang:        'Langue',
@@ -238,6 +242,10 @@
       broker_email_placeholder: 'broker@example.com',
       broker_name_placeholder:  'First Last',
       to_assign_badge:       'To assign',
+      sort_recent:           'Recent',
+      sort_score:            'Score',
+      sort_budget:            'Budget',
+      sort_messages:          'Messages',
       // login.html
       login_subtitle:       'Broker login',
       email_input_placeholder: 'your@email.com',

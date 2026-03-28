@@ -205,6 +205,15 @@
         </button>
       </div>
 
+      <div class="profile-strip hidden" id="profileStrip">
+        <span class="profile-strip-dot" id="stripDot"></span>
+        <span class="profile-strip-name" id="stripName">—</span>
+        <span class="profile-strip-sep">·</span>
+        <span class="profile-strip-field" id="stripBudget">—</span>
+        <span class="profile-strip-sep">·</span>
+        <span class="profile-strip-field" id="stripNeighbourhood">—</span>
+      </div>
+
       <div class="stats-bar" id="statsBar">
         <div class="stat-item">
           <span class="stat-label" data-i18n="tokens">Tokens</span>
@@ -520,6 +529,7 @@
                 activeSessionData = null;
                 intervenirBtn.disabled = true;
                 claimBtn.classList.add('hidden');
+                profileStrip.classList.add('hidden');
               }
               break;
 
@@ -702,6 +712,7 @@
           ws.send(JSON.stringify({ type: 'select_session', sessionId }));
         }
         showChat(sessionData?.leadName || i18n.t('new_client'));
+        profileStrip.classList.remove('hidden');
       }
 
       claimBtn.addEventListener('click', () => {
@@ -736,6 +747,11 @@
           el.textContent = '—';
           el.classList.remove('populated');
         }
+        // Reset strip
+        document.getElementById('stripName').textContent = '—';
+        document.getElementById('stripBudget').textContent = '—';
+        document.getElementById('stripNeighbourhood').textContent = '—';
+        document.getElementById('stripDot').className = 'profile-strip-dot';
       }
 
       function resetStatsBar() {
@@ -800,6 +816,21 @@
         }
         if (p.notes && p.notes !== 'null') {
           document.getElementById('notesValue').textContent = p.notes;
+        }
+        // Update profile strip
+        const stripName = document.getElementById('stripName');
+        const stripBudget = document.getElementById('stripBudget');
+        const stripNeighbourhood = document.getElementById('stripNeighbourhood');
+        const stripDot = document.getElementById('stripDot');
+        if (p.name && p.name !== 'null') stripName.textContent = p.name;
+        if (p.budget && p.budget !== 'null') stripBudget.textContent = p.budget;
+        if (p.neighbourhood && p.neighbourhood !== 'null') stripNeighbourhood.textContent = p.neighbourhood;
+        if (p.leadScore && p.leadScore !== 'null') {
+          const s = p.leadScore.toLowerCase();
+          stripDot.className = 'profile-strip-dot';
+          if (s === 'froid') stripDot.classList.add('froid');
+          else if (s === 'tiède' || s === 'tiede') stripDot.classList.add('tiede');
+          else if (s === 'chaud') stripDot.classList.add('chaud');
         }
       }
 
@@ -875,6 +906,7 @@
       const chatPanel = document.getElementById('panel-chat');
       const sessionsPanel = document.getElementById('panel-sessions');
       const chatSessionName = document.getElementById('chatSessionName');
+      const profileStrip = document.getElementById('profileStrip');
 
       function showChat(sessionName) {
         sessionsPanel.classList.add('view-hidden');
@@ -886,6 +918,7 @@
         chatPanel.classList.add('view-hidden');
         sessionsPanel.classList.remove('view-hidden');
         profilePanel.classList.remove('profile-open');
+        profileStrip.classList.add('hidden');
       }
 
       function toggleProfile() {
@@ -898,6 +931,7 @@
       backBtn.addEventListener('click', showSessions);
       profileBtn.addEventListener('click', toggleProfile);
       closeProfileBtn.addEventListener('click', toggleProfile);
+      profileStrip.addEventListener('click', toggleProfile);
 
       // ── Sidebar tabs (all brokers) ────────────────────────────────────────
       let clientsLoaded = false;

@@ -501,6 +501,57 @@ body {
   border-radius: 4px;
 }
 
+/* ── Profile summary strip ─────────────────────────────────── */
+.profile-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: var(--teal-50);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: background 0.15s;
+}
+
+.profile-strip:hover { background: var(--teal-100, #ccfbf1); }
+
+.profile-strip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--text-secondary);
+}
+
+.profile-strip-dot.froid { background: var(--text-secondary); }
+.profile-strip-dot.tiede { background: var(--amber-600); }
+.profile-strip-dot.chaud { background: var(--red-text); }
+
+.profile-strip-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-strip-sep {
+  color: var(--text-secondary);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.profile-strip-field {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .no-session-selected {
   display: flex;
   align-items: center;

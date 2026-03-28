@@ -77,7 +77,7 @@
       broker_name_placeholder:  'Prénom Nom',
       to_assign_badge:       'À assigner',
       sort_recent:           'Récent',
-      sort_score:            'Score',
+      sort_score:            'Niveau intérêt',
       sort_budget:           'Budget',
       sort_messages:         'Messages',
       // broker.html – burger menu
@@ -243,7 +243,7 @@
       broker_name_placeholder:  'First Last',
       to_assign_badge:       'To assign',
       sort_recent:           'Recent',
-      sort_score:            'Score',
+      sort_score:            'Interest level',
       sort_budget:            'Budget',
       sort_messages:          'Messages',
       // login.html

@@ -70,6 +70,15 @@
       settings_lang:        'Langue',
       menu_limits:          'Limites',
       menu_share:           'Partager & Intégrer',
+      // broker.html – embed modal
+      embed_link_label:     'Lien direct',
+      embed_copy_link:      'Copier le lien',
+      embed_snippet_label:  'Widget à intégrer (JS)',
+      embed_copy_snippet:   'Copier le snippet',
+      copied:               '✓ Copié !',
+      // broker.html – assign
+      assign_btn:           'Assigner',
+      broker_select_placeholder: '— Choisir un courtier —',
       // broker.html – abuse limits
       limits_title:         'Limites de la conversation',
       limits_rate:          'Débit',
@@ -165,6 +174,15 @@
       settings_lang:        'Language',
       menu_limits:          'Limits',
       menu_share:           'Share & Embed',
+      // broker.html – embed modal
+      embed_link_label:     'Direct link',
+      embed_copy_link:      'Copy link',
+      embed_snippet_label:  'Embed widget (JS)',
+      embed_copy_snippet:   'Copy snippet',
+      copied:               '✓ Copied!',
+      // broker.html – assign
+      assign_btn:           'Assign',
+      broker_select_placeholder: '— Select a broker —',
       // broker.html – abuse limits
       limits_title:         'Conversation limits',
       limits_rate:          'Rate',

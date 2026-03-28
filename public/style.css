@@ -277,6 +277,55 @@ body {
   color: var(--text-secondary);
 }
 
+/* ── Broker email in top bar ─────────────────────────────────── */
+.broker-email-display {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ── Account modal ──────────────────────────────────────────── */
+.account-email-readonly {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 6px 0 0;
+}
+.account-name-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.account-name-input:focus {
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 2px var(--teal-50);
+}
+.account-save-btn {
+  width: 100%;
+  padding: 8px 0;
+  background: var(--teal-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.account-save-btn:hover {
+  opacity: 0.9;
+}
+.account-save-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ── Burger menu ─────────────────────────────────────────────── */
 .burger-menu {
   position: relative;

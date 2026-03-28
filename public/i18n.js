@@ -74,6 +74,11 @@
       settings_lang:        'Langue',
       menu_limits:          'Limites',
       menu_share:           'Partager & Intégrer',
+      menu_account:         'Compte',
+      account_name_label:   'Nom',
+      account_email_label:  'Courriel',
+      account_save:         'Enregistrer',
+      account_saved:        'Enregistré !',
       // broker.html – embed modal
       embed_link_label:     'Lien direct',
       embed_copy_link:      'Copier le lien',
@@ -182,6 +187,11 @@
       settings_lang:        'Language',
       menu_limits:          'Limits',
       menu_share:           'Share & Embed',
+      menu_account:         'Account',
+      account_name_label:   'Name',
+      account_email_label:  'Email',
+      account_save:         'Save',
+      account_saved:        'Saved!',
       // broker.html – embed modal
       embed_link_label:     'Direct link',
       embed_copy_link:      'Copy link',

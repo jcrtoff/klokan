@@ -330,9 +330,7 @@
         currentBroker = await resp.json();
         localStorage.setItem('klokan_broker', JSON.stringify(currentBroker));
         document.getElementById('brokerNameDisplay').textContent = currentBroker.name;
-        if (currentBroker.role !== 'manager') {
-          document.getElementById('clientsLink').classList.remove('hidden');
-        }
+        document.getElementById('clientsLink').classList.remove('hidden');
         if (currentBroker.language && !localStorage.getItem('klokan_language')) {
           i18n.setLang(currentBroker.language);
         }

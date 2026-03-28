@@ -94,6 +94,27 @@
     }
     .embed-copy-btn:hover { background: var(--teal-800); }
     .embed-copy-btn.copied { background: #22c55e; }
+
+    /* Clients tab */
+    .clients-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .clients-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .clients-search { flex: 1; padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 14px; background: var(--bg); outline: none; color: var(--text-primary); }
+    .clients-search:focus { border-color: var(--teal-600); }
+    .clients-score-filter { padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 14px; background: var(--bg); cursor: pointer; outline: none; color: var(--text-primary); }
+    .clients-count { font-size: 13px; color: var(--text-secondary); margin-left: auto; }
+    .clients-table-wrapper { flex: 1; overflow: auto; padding: 16px; }
+    .clients-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+    .clients-table thead th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); background: var(--bg); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+    .clients-table thead th:hover { color: var(--text-primary); }
+    .clients-table thead th.sort-asc::after  { content: ' ↑'; }
+    .clients-table thead th.sort-desc::after { content: ' ↓'; }
+    .clients-table tbody tr { cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s ease; }
+    .clients-table tbody tr:last-child { border-bottom: none; }
+    .clients-table tbody tr:hover { background: var(--teal-50, #EBF0FF); }
+    .clients-table td { padding: 12px 16px; font-size: 14px; color: var(--text-primary); white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+    .clients-table td.muted { color: var(--text-secondary); }
+    .score-cell { display: flex; align-items: center; gap: 6px; }
+    .clients-empty { text-align: center; padding: 48px 24px; color: var(--text-secondary); font-size: 14px; }
   </style>
 </head>
 <body>
@@ -102,7 +123,6 @@
   <div class="app-top-bar">
     <span class="app-brand">Klokan</span>
     <div class="app-top-right">
-      <a id="clientsLink" href="/broker/clients" class="link-btn hidden" data-i18n="clients_link">Clients →</a>
       <div class="burger-menu" id="burgerMenu">
         <button class="burger-btn" id="burgerBtn" aria-label="Menu">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -123,12 +143,43 @@
   <div class="broker-container">
     <!-- Left pane: session sidebar -->
     <div class="broker-sidebar" id="panel-sessions">
-      <div class="sidebar-tabs hidden" id="sidebarTabs">
+      <div class="sidebar-tabs" id="sidebarTabs">
         <button class="sidebar-tab active" data-tab="sessions" data-i18n="sessions">Sessions</button>
-        <button class="sidebar-tab" data-tab="team" data-i18n="my_team">Mon équipe</button>
+        <button class="sidebar-tab" data-tab="clients" data-i18n="clients_tab">Clients</button>
+        <button class="sidebar-tab hidden" data-tab="team" id="teamTab" data-i18n="team">Équipe</button>
       </div>
       <div class="session-list" id="sessionList">
         <div class="session-empty" data-i18n="no_active_session">Aucune session active</div>
+      </div>
+      <div class="clients-panel hidden" id="clientsPanel">
+        <div class="clients-toolbar">
+          <input type="search" id="clSearchInput" class="clients-search" data-i18n="search_placeholder" data-i18n-target="placeholder" placeholder="Rechercher par nom ou courriel…">
+          <select id="clScoreFilter" class="clients-score-filter">
+            <option value="" data-i18n="filter_all">Tous les scores</option>
+            <option value="chaud" data-i18n="score_chaud">Chaud</option>
+            <option value="tiède" data-i18n="score_tiede">Tiède</option>
+            <option value="froid" data-i18n="score_froid">Froid</option>
+          </select>
+          <span class="clients-count" id="clCount"></span>
+        </div>
+        <div class="clients-table-wrapper">
+          <div id="clLoading" class="clients-empty" data-i18n="loading">Chargement…</div>
+          <table class="clients-table hidden" id="clTable">
+            <thead>
+              <tr>
+                <th data-col="leadName"      data-i18n="col_name">Nom</th>
+                <th data-col="leadScore"     data-i18n="col_score">Score</th>
+                <th data-col="budget"        data-i18n="col_budget">Budget</th>
+                <th data-col="neighbourhood" data-i18n="col_neighbourhood">Quartier</th>
+                <th data-col="projectType"   data-i18n="col_project">Type de projet</th>
+                <th data-col="lastActivity"  data-i18n="col_last_activity">Dernière activité</th>
+                <th data-col="messageCount"  data-i18n="col_msgs">Msgs</th>
+              </tr>
+            </thead>
+            <tbody id="clBody"></tbody>
+          </table>
+          <div class="clients-empty hidden" id="clEmpty" data-i18n="no_clients">Aucun client trouvé.</div>
+        </div>
       </div>
       <div class="team-panel hidden" id="teamPanel">
         <form class="team-form" id="addBrokerForm">
@@ -330,7 +381,6 @@
         currentBroker = await resp.json();
         localStorage.setItem('klokan_broker', JSON.stringify(currentBroker));
         document.getElementById('brokerNameDisplay').textContent = currentBroker.name;
-        document.getElementById('clientsLink').classList.remove('hidden');
         if (currentBroker.language && !localStorage.getItem('klokan_language')) {
           i18n.setLang(currentBroker.language);
         }
@@ -849,21 +899,136 @@
       profileBtn.addEventListener('click', toggleProfile);
       closeProfileBtn.addEventListener('click', toggleProfile);
 
+      // ── Sidebar tabs (all brokers) ────────────────────────────────────────
+      let clientsLoaded = false;
+      let clAllClients = [];
+      let clSortCol = 'lastActivity';
+      let clSortDir = 'desc';
+      const CL_SCORE_ORDER = { chaud: 3, 'tiède': 2, tiede: 2, froid: 1 };
+
+      document.querySelectorAll('.sidebar-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const which = tab.dataset.tab;
+          document.getElementById('sessionList').classList.toggle('hidden', which !== 'sessions');
+          document.getElementById('clientsPanel').classList.toggle('hidden', which !== 'clients');
+          document.getElementById('teamPanel').classList.toggle('hidden', which !== 'team');
+          if (which === 'team') loadTeam();
+          if (which === 'clients' && !clientsLoaded) { clientsLoaded = true; loadClients(); }
+        });
+      });
+
+      async function loadClients() {
+        try {
+          const resp = await fetch('/api/clients', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (!resp.ok) throw new Error();
+          clAllClients = await resp.json();
+          document.getElementById('clLoading').classList.add('hidden');
+          document.getElementById('clTable').classList.remove('hidden');
+          clApplySort('lastActivity', 'desc');
+          renderClients();
+        } catch {
+          document.getElementById('clLoading').textContent = i18n.t('load_error');
+        }
+      }
+
+      function clApplySort(col, dir) {
+        clSortCol = col;
+        clSortDir = dir;
+        document.querySelectorAll('#clTable thead th').forEach(th => {
+          th.classList.remove('sort-asc', 'sort-desc');
+          if (th.dataset.col === col) th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        });
+        clAllClients.sort((a, b) => {
+          let va = a[col], vb = b[col];
+          if (va == null && vb == null) return 0;
+          if (va == null) return 1;
+          if (vb == null) return -1;
+          if (col === 'leadScore') {
+            return dir === 'asc' ? (CL_SCORE_ORDER[va.toLowerCase()] ?? 0) - (CL_SCORE_ORDER[vb.toLowerCase()] ?? 0) : (CL_SCORE_ORDER[vb.toLowerCase()] ?? 0) - (CL_SCORE_ORDER[va.toLowerCase()] ?? 0);
+          }
+          if (typeof va === 'number' && typeof vb === 'number') return dir === 'asc' ? va - vb : vb - va;
+          const sa = String(va).toLowerCase(), sb = String(vb).toLowerCase();
+          if (sa < sb) return dir === 'asc' ? -1 : 1;
+          if (sa > sb) return dir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      document.querySelectorAll('#clTable thead th[data-col]').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.col;
+          const newDir = (clSortCol === col && clSortDir === 'asc') ? 'desc' : 'asc';
+          clApplySort(col, newDir);
+          renderClients();
+        });
+      });
+
+      document.getElementById('clSearchInput').addEventListener('input', renderClients);
+      document.getElementById('clScoreFilter').addEventListener('change', renderClients);
+
+      function clGetFiltered() {
+        const q = document.getElementById('clSearchInput').value.trim().toLowerCase();
+        const scoreVal = document.getElementById('clScoreFilter').value.toLowerCase();
+        return clAllClients.filter(c => {
+          if (scoreVal) {
+            const cs = (c.leadScore || '').toLowerCase();
+            const normalized = (cs === 'tiede') ? 'tiède' : cs;
+            if (normalized !== scoreVal) return false;
+          }
+          if (q) {
+            const name = (c.leadName || '').toLowerCase();
+            const email = (c.email || '').toLowerCase();
+            if (!name.includes(q) && !email.includes(q)) return false;
+          }
+          return true;
+        });
+      }
+
+      function clEsc(str) {
+        const d = document.createElement('div');
+        d.textContent = String(str);
+        return d.innerHTML;
+      }
+
+      function renderClients() {
+        const filtered = clGetFiltered();
+        const tbody = document.getElementById('clBody');
+        const emptyMsg = document.getElementById('clEmpty');
+        const countEl = document.getElementById('clCount');
+        countEl.textContent = filtered.length + ' / ' + clAllClients.length;
+        if (filtered.length === 0) { tbody.innerHTML = ''; emptyMsg.classList.remove('hidden'); return; }
+        emptyMsg.classList.add('hidden');
+        tbody.innerHTML = '';
+        const lang = i18n.getLang();
+        for (const c of filtered) {
+          const tr = document.createElement('tr');
+          const score = (c.leadScore || '').toLowerCase();
+          const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : (score || '');
+          const scoreLabel = score ? score.charAt(0).toUpperCase() + score.slice(1) : '—';
+          const lastActivity = c.lastActivity
+            ? new Date(c.lastActivity).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', { month: 'short', day: 'numeric', year: 'numeric' })
+            : '—';
+          tr.innerHTML =
+            '<td><strong>' + clEsc(c.leadName || i18n.t('new_client')) + '</strong></td>' +
+            '<td><div class="score-cell">' + (scoreClass ? '<span class="session-score-dot ' + scoreClass + '"></span>' : '') + '<span>' + clEsc(scoreLabel) + '</span></div></td>' +
+            '<td class="muted">' + clEsc(c.budget || '—') + '</td>' +
+            '<td class="muted">' + clEsc(c.neighbourhood || '—') + '</td>' +
+            '<td class="muted">' + clEsc(c.projectType || '—') + '</td>' +
+            '<td class="muted">' + lastActivity + '</td>' +
+            '<td class="muted">' + c.messageCount + '</td>';
+          tr.addEventListener('click', () => {
+            window.location.href = '/broker?session=' + encodeURIComponent(c.id);
+          });
+          tbody.appendChild(tr);
+        }
+      }
+
       // ── Manager team tab ──────────────────────────────────────────────────
       if (currentBroker?.role === 'manager') {
         loadTeamBrokers();
-        document.getElementById('sidebarTabs').classList.remove('hidden');
-
-        document.querySelectorAll('.sidebar-tab').forEach(tab => {
-          tab.addEventListener('click', () => {
-            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            const isTeam = tab.dataset.tab === 'team';
-            document.getElementById('sessionList').classList.toggle('hidden', isTeam);
-            document.getElementById('teamPanel').classList.toggle('hidden', !isTeam);
-            if (isTeam) loadTeam();
-          });
-        });
+        document.getElementById('teamTab').classList.remove('hidden');
 
         document.getElementById('addBrokerForm').addEventListener('submit', async (e) => {
           e.preventDefault();

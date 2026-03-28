@@ -13,6 +13,8 @@
       // broker.html
       sessions:             'Sessions',
       my_team:              'Mon équipe',
+      clients_tab:          'Clients',
+      team:                 'Équipe',
       no_active_session:    'Aucune session active',
       add_broker:           'Ajouter un courtier',
       email_placeholder:    'courriel@example.com',
@@ -135,6 +137,8 @@
       // broker.html
       sessions:             'Sessions',
       my_team:              'My Team',
+      clients_tab:          'Clients',
+      team:                 'Team',
       no_active_session:    'No active sessions',
       add_broker:           'Add a broker',
       email_placeholder:    'email@example.com',

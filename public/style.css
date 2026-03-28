@@ -1,29 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg:             #F5F7FA;
-  --surface:        #ffffff;
+  --bg:             #F2EDE6;
+  --surface:        #FDFAF7;
   --border:         rgba(0,0,0,0.08);
-  --text-primary:   #222222;
-  --text-secondary: #6b6a65;
+  --text-primary:   #3D4A5C;
+  --text-secondary: #6B7A8D;
 
-  /* Primary brand: Cobalt Blue */
-  --teal-50:        #EBF0FF;
-  --teal-600:       #1E4FFF;
-  --teal-800:       #1540D4;
+  /* Primary: Slate */
+  --teal-50:        #E8EBF0;
+  --teal-600:       #3D4A5C;
+  --teal-800:       #2E3A4A;
 
-  /* CTA accent: Electric Teal */
-  --cta-bg:         #CCFBF9;
-  --cta-600:        #00E0D6;
-  --cta-800:        #00B8AF;
+  /* CTA accent: Terracotta */
+  --cta-bg:         #F5DDD5;
+  --cta-600:        #C4694F;
+  --cta-800:        #A85840;
 
-  /* Semantic: broker actions */
-  --amber-50:       #FAEEDA;
-  --amber-600:      #854F0B;
+  /* Semantic: broker / sage */
+  --amber-50:       #E8F0E9;
+  --amber-600:      #8A9E8C;
 
   /* Semantic: user bubble */
-  --blue-50:        #EBF0FF;
-  --blue-600:       #1E4FFF;
+  --blue-50:        #E8EBF0;
+  --blue-600:       #3D4A5C;
 
   /* Semantic: errors */
   --red-bg:         #FCEBEB;
@@ -37,19 +37,16 @@
 .brand-klokan,
 .app-brand,
 .login-card h1 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Fraunces', serif;
   font-weight: 800;
   letter-spacing: -0.03em;
-  background: linear-gradient(90deg, var(--teal-600), var(--cta-600));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--teal-600);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -120,29 +117,30 @@ body {
 
 .bubble.user {
   align-self: flex-end;
-  background: var(--blue-600);
-  color: #fff;
+  background: var(--bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
   border-bottom-right-radius: 4px;
 }
 
 .bubble.ai {
   align-self: flex-start;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--teal-600);
+  color: #fff;
   border-bottom-left-radius: 4px;
 }
 
 .bubble.broker {
   align-self: flex-start;
-  background: var(--amber-50);
-  border: 1px solid rgba(133,79,11,0.15);
+  background: var(--teal-600);
+  color: #fff;
   border-bottom-left-radius: 4px;
 }
 
 .bubble.broker .broker-label {
   font-size: 11px;
   font-weight: 700;
-  color: var(--amber-600);
+  color: var(--cta-600);
   margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -226,7 +224,7 @@ body {
 }
 
 .input-bar input:focus {
-  border-color: var(--teal-600);
+  border-color: var(--cta-600);
 }
 
 .input-bar button {
@@ -304,13 +302,13 @@ body {
   box-sizing: border-box;
 }
 .account-name-input:focus {
-  border-color: var(--teal-600);
-  box-shadow: 0 0 0 2px var(--teal-50);
+  border-color: var(--cta-600);
+  box-shadow: 0 0 0 2px var(--cta-bg);
 }
 .account-save-btn {
   width: 100%;
   padding: 8px 0;
-  background: var(--teal-600);
+  background: var(--cta-600);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
@@ -492,14 +490,14 @@ body {
 }
 
 .sort-chip:hover {
-  border-color: var(--teal-600);
-  color: var(--teal-600);
+  border-color: var(--cta-600);
+  color: var(--cta-600);
 }
 
 .sort-chip.active {
-  background: var(--teal-50);
-  border-color: var(--teal-600);
-  color: var(--teal-600);
+  background: var(--cta-bg);
+  border-color: var(--cta-600);
+  color: var(--cta-600);
   font-weight: 600;
 }
 
@@ -528,8 +526,8 @@ body {
 }
 
 .session-item.active {
-  background: var(--teal-50);
-  border-left-color: var(--teal-600);
+  background: var(--cta-bg);
+  border-left-color: var(--cta-600);
 }
 
 .session-item-top {
@@ -555,9 +553,9 @@ body {
   flex-shrink: 0;
 }
 
-.session-score-dot.froid { background: var(--text-secondary); }
-.session-score-dot.tiede { background: var(--amber-600); }
-.session-score-dot.chaud { background: var(--red-text); }
+.session-score-dot.froid { background: #6B7A8D; }
+.session-score-dot.tiede { background: #D4A843; }
+.session-score-dot.chaud { background: #C4694F; }
 
 .session-item-details {
   font-size: 12px;
@@ -599,12 +597,12 @@ body {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: var(--teal-600);
+  color: var(--cta-600);
   text-decoration: none;
   padding: 2px 8px;
   border-radius: var(--radius);
-  background: var(--teal-50);
-  border: 1px solid var(--teal-600);
+  background: var(--cta-bg);
+  border: 1px solid var(--cta-600);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -613,7 +611,8 @@ body {
 }
 
 .session-action-btn:hover {
-  background: var(--teal-100, #ccfbf1);
+  background: var(--cta-600);
+  color: #fff;
 }
 
 .session-action-btn svg {
@@ -659,7 +658,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 20px;
-  background: var(--teal-50);
+  background: var(--cta-bg);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   flex-shrink: 0;
@@ -667,7 +666,7 @@ body {
   transition: background 0.15s;
 }
 
-.profile-strip:hover { background: var(--teal-100, #ccfbf1); }
+.profile-strip:hover { background: var(--cta-bg); }
 
 .profile-strip-dot {
   width: 8px;
@@ -677,9 +676,9 @@ body {
   background: var(--text-secondary);
 }
 
-.profile-strip-dot.froid { background: var(--text-secondary); }
-.profile-strip-dot.tiede { background: var(--amber-600); }
-.profile-strip-dot.chaud { background: var(--red-text); }
+.profile-strip-dot.froid { background: #6B7A8D; }
+.profile-strip-dot.tiede { background: #D4A843; }
+.profile-strip-dot.chaud { background: #C4694F; }
 
 .profile-strip-name {
   font-size: 13px;
@@ -857,7 +856,7 @@ body {
 .broker-status {
   text-align: center;
   font-size: 13px;
-  color: var(--teal-600);
+  color: var(--cta-600);
   font-weight: 600;
   margin-bottom: 8px;
 }
@@ -871,8 +870,8 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--teal-50);
-  color: var(--teal-600);
+  background: var(--cta-bg);
+  color: var(--cta-600);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -959,13 +958,13 @@ body {
 }
 
 .score-badge.tiede {
-  background: var(--amber-50);
-  color: var(--amber-600);
+  background: #FDF3E3;
+  color: #D4A843;
 }
 
 .score-badge.chaud {
-  background: var(--red-bg);
-  color: var(--red-text);
+  background: var(--cta-bg);
+  color: var(--cta-600);
 }
 
 /* ── Notes IA ────────────────────────────────────────────────── */
@@ -1120,7 +1119,7 @@ body {
   margin-bottom: 12px;
 }
 
-.login-card input:focus { border-color: var(--teal-600); }
+.login-card input:focus { border-color: var(--cta-600); }
 
 .login-card button {
   width: 100%;
@@ -1166,7 +1165,7 @@ body {
 /* ── Desktop: centred column with whitespace ─────────────────── */
 @media (min-width: 640px) {
   body {
-    background: #E0E4EC;
+    background: #E5DED6;
   }
 
   .chat-container {
@@ -1183,7 +1182,7 @@ body {
 
 .link-btn {
   background: none !important;
-  color: var(--teal-600) !important;
+  color: var(--cta-600) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   padding: 4px 0 !important;
@@ -1206,8 +1205,8 @@ body {
 .session-assigned-badge {
   font-size: 10px;
   font-weight: 600;
-  color: var(--teal-600);
-  background: var(--teal-50);
+  color: var(--cta-600);
+  background: var(--cta-bg);
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -1286,8 +1285,8 @@ body {
 }
 
 .sidebar-tab.active {
-  color: var(--teal-600);
-  border-bottom-color: var(--teal-600);
+  color: var(--cta-600);
+  border-bottom-color: var(--cta-600);
 }
 
 /* ── Team panel ───────────────────────────────────────────────── */
@@ -1366,7 +1365,7 @@ body {
   background: var(--bg);
 }
 
-.team-form input:focus { border-color: var(--teal-600); outline: none; }
+.team-form input:focus { border-color: var(--cta-600); outline: none; }
 
 .team-form button {
   padding: 8px;

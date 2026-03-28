@@ -639,11 +639,24 @@
             badge = '<span class="session-assigned-badge">' + escapeHtml(s.assignedBrokerName) + '</span>';
           }
 
+          // Profile details line
+          const details = [s.projectType, s.budget, s.neighbourhood].filter(Boolean).map(escapeHtml);
+          const detailsHtml = details.length > 0
+            ? '<div class="session-item-details">' + details.join(' · ') + '</div>'
+            : '';
+
+          // Last message preview
+          const lastMsgHtml = s.lastMessage
+            ? '<div class="session-item-preview">' + escapeHtml(s.lastMessage) + '</div>'
+            : '';
+
           item.innerHTML =
             '<div class="session-item-top">' +
               '<span class="session-score-dot ' + scoreClass + '"></span>' +
               '<span class="session-name">' + escapeHtml(name) + '</span>' +
             '</div>' +
+            detailsHtml +
+            lastMsgHtml +
             '<div class="session-item-bottom">' +
               '<span class="session-msg-count">' + s.messageCount + ' msg</span>' +
               badge +

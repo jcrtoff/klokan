@@ -478,6 +478,28 @@ body {
 .session-score-dot.tiede { background: var(--amber-600); }
 .session-score-dot.chaud { background: var(--red-text); }
 
+.session-item-details {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding-left: 16px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-item-preview {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding-left: 16px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+  opacity: 0.75;
+}
+
 .session-item-bottom {
   display: flex;
   align-items: center;

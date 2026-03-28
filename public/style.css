@@ -505,6 +505,40 @@ body {
   color: var(--text-primary);
 }
 
+.session-item-actions {
+  display: flex;
+  gap: 8px;
+  padding-left: 16px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.session-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--teal-600);
+  text-decoration: none;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: var(--teal-50);
+  border: 1px solid var(--teal-600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  transition: background 0.15s;
+}
+
+.session-action-btn:hover {
+  background: var(--teal-100, #ccfbf1);
+}
+
+.session-action-btn svg {
+  flex-shrink: 0;
+}
+
 .session-item-broker {
   font-size: 12px;
   color: var(--text-secondary);

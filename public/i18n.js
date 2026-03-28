@@ -75,6 +75,7 @@
       revoke_broker_confirm: "Révoquer l'accès de ce courtier ?",
       broker_email_placeholder: 'courtier@example.com',
       broker_name_placeholder:  'Prénom Nom',
+      to_assign_badge:       'À assigner',
       // broker.html – burger menu
       settings:             'Paramètres',
       settings_lang:        'Langue',
@@ -236,6 +237,7 @@
       revoke_broker_confirm: "Revoke this broker's access?",
       broker_email_placeholder: 'broker@example.com',
       broker_name_placeholder:  'First Last',
+      to_assign_badge:       'To assign',
       // login.html
       login_subtitle:       'Broker login',
       email_input_placeholder: 'your@email.com',

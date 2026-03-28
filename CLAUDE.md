@@ -23,8 +23,8 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 - **`/api/auth/*`** — auth endpoints (request-code, verify, me)
 - **WebSocket flow**: clients identify as `chat` or `broker` role. Broker connections require JWT. User messages trigger Claude streaming responses. Brokers can send messages directly (no AI response triggered). Lead profile extraction runs async after each AI response.
 - **State**: PostgreSQL for persistent data (brokers, sessions, messages, OTP codes). In-memory Map as hot cache for active sessions (WS connections, streaming state). Sessions loaded from DB on demand.
-- **Visibility**: Role-based — brokers see only their assigned sessions + unassigned. Managers see all.
-- **Session assignment**: Pre-assigned via `/chat?broker=<id>`, or broker claims from queue ("Prendre en charge").
+- **Visibility**: Scoped by role — brokers (solo or managed) see only sessions assigned to them. Managers see their own sessions + their team members' sessions. Admins see all.
+- **Session assignment**: Every session enters via `/chat?broker=<id>`. Manager widget sessions are assigned to the manager, who dispatches to team members. Broker widget sessions are assigned directly to that broker.
 
 ## Key files
 
@@ -33,6 +33,7 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 | `server.js` | Express + WS server bootstrap (slim orchestrator) |
 | `lib/db.js` | Prisma client initialization |
 | `lib/auth.js` | OTP generation/verification, JWT, Brevo email |
+| `lib/adminRoutes.js` | Admin + manager CRUD endpoints (managers, solo brokers, team brokers) |
 | `lib/routes.js` | Express route handlers (auth + static) |
 | `lib/sessions.js` | Session CRUD, in-memory cache + DB sync |
 | `lib/websocket.js` | WS message handling, filtered broadcast |
@@ -48,6 +49,15 @@ Single `server.js` process runs both an Express HTTP server and a WebSocket serv
 | `infra/template.yaml` | CloudFormation — ECR repos |
 | `infra/push-image.sh` | Build Docker image, push to ECR |
 | `Dockerfile` | Node 20 Alpine, Prisma migrate on start |
+
+## Roles & session visibility
+
+| Role | Created by | Sees sessions | Widget |
+|------|-----------|--------------|--------|
+| Admin | `ADMIN_EMAILS` env var | All | N/A |
+| Manager | Admin | Own + team members' | `/chat?broker=<managerId>` — sessions land on manager, dispatched to team |
+| Broker (managed) | Manager | Only assigned to them | `/chat?broker=<brokerId>` — sessions assigned directly |
+| Broker (solo) | Admin | Only assigned to them | `/chat?broker=<brokerId>` — sessions assigned directly |
 
 ## Environment variables
 

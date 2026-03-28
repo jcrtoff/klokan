@@ -702,6 +702,8 @@
             badge = `<span class="session-broker-badge">${i18n.t('broker_badge')}</span>`;
           } else if (!s.assignedBrokerId) {
             badge = `<span class="session-unassigned-badge">${i18n.t('unassigned_badge')}</span>`;
+          } else if (currentBroker?.role === 'manager' && s.assignedBrokerId === currentBroker.id) {
+            badge = `<span class="session-unassigned-badge">${i18n.t('to_assign_badge')}</span>`;
           }
 
           // Profile details line
@@ -758,9 +760,6 @@
           claimBtn.classList.add('hidden');
           populateBrokerDropdown();
           managerAssignSection.classList.remove('hidden');
-        } else if (!activeSessionData.assignedBrokerId) {
-          claimBtn.classList.remove('hidden');
-          managerAssignSection.classList.add('hidden');
         } else {
           claimBtn.classList.add('hidden');
           managerAssignSection.classList.add('hidden');

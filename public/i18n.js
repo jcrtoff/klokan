@@ -65,6 +65,11 @@
       not_found:            'Introuvable.',
       mgr_email_placeholder: 'gestionnaire@example.com',
       mgr_name_placeholder:  'Prénom Nom',
+      // broker.html – abuse limits
+      limits_title:         'Limites de la conversation',
+      limits_rate:          'Débit',
+      limits_length:        'Longueur',
+      limits_cost:          'Coût max',
       // login.html
       login_subtitle:       'Connexion courtier',
       email_input_placeholder: 'votre@courriel.com',
@@ -150,6 +155,11 @@
       tab_sessions:         'Sessions',
       tab_chat:             'Chat',
       tab_lead:             'Profile',
+      // broker.html – abuse limits
+      limits_title:         'Conversation limits',
+      limits_rate:          'Rate',
+      limits_length:        'Length',
+      limits_cost:          'Max cost',
       // admin.html
       managers:             'Managers',
       add_manager:          'Add a manager',

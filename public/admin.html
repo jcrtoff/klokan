@@ -158,6 +158,22 @@
 
     <div id="managersPanel">
     <div class="admin-section">
+      <h2 data-i18n="add_manager">Ajouter un gestionnaire</h2>
+      <form class="admin-form" id="addManagerForm" autocomplete="off">
+        <div class="field">
+          <label for="mgEmail" data-i18n="email_label">Courriel</label>
+          <input type="email" id="mgEmail" placeholder="gestionnaire@example.com" data-i18n="mgr_email_placeholder" data-i18n-target="placeholder" required>
+        </div>
+        <div class="field">
+          <label for="mgName" data-i18n="name_label">Nom</label>
+          <input type="text" id="mgName" placeholder="Prénom Nom" data-i18n="mgr_name_placeholder" data-i18n-target="placeholder" required>
+        </div>
+        <button type="submit" id="addBtn" data-i18n="add_btn">Ajouter</button>
+      </form>
+      <div class="form-error hidden" id="formError"></div>
+    </div>
+
+    <div class="admin-section">
       <table class="admin-table" id="managersTable">
         <thead>
           <tr>
@@ -173,25 +189,25 @@
         </tbody>
       </table>
     </div>
-
-    <div class="admin-section">
-      <h2 data-i18n="add_manager">Ajouter un gestionnaire</h2>
-      <form class="admin-form" id="addManagerForm" autocomplete="off">
-        <div class="field">
-          <label for="mgEmail" data-i18n="email_label">Courriel</label>
-          <input type="email" id="mgEmail" placeholder="gestionnaire@example.com" data-i18n="mgr_email_placeholder" data-i18n-target="placeholder" required>
-        </div>
-        <div class="field">
-          <label for="mgName" data-i18n="name_label">Nom</label>
-          <input type="text" id="mgName" placeholder="Prénom Nom" data-i18n="mgr_name_placeholder" data-i18n-target="placeholder" required>
-        </div>
-        <button type="submit" id="addBtn" data-i18n="add_btn">Ajouter</button>
-      </form>
-      <div class="form-error hidden" id="formError"></div>
-    </div>
     </div>
 
     <div id="brokersPanel" class="hidden">
+    <div class="admin-section">
+      <h2 data-i18n="add_solo_broker">Ajouter un courtier solo</h2>
+      <form class="admin-form" id="addBrokerForm" autocomplete="off">
+        <div class="field">
+          <label for="brEmail" data-i18n="email_label">Courriel</label>
+          <input type="email" id="brEmail" placeholder="courtier@example.com" data-i18n="broker_email_placeholder" data-i18n-target="placeholder" required>
+        </div>
+        <div class="field">
+          <label for="brName" data-i18n="name_label">Nom</label>
+          <input type="text" id="brName" placeholder="Prénom Nom" data-i18n="broker_name_placeholder" data-i18n-target="placeholder" required>
+        </div>
+        <button type="submit" id="addBrokerBtn" data-i18n="add_btn">Ajouter</button>
+      </form>
+      <div class="form-error hidden" id="brokerFormError"></div>
+    </div>
+
     <div class="admin-section">
       <table class="admin-table" id="brokersTable">
         <thead>
@@ -207,22 +223,6 @@
           <tr class="empty-row"><td colspan="5" data-i18n="loading">Chargement…</td></tr>
         </tbody>
       </table>
-    </div>
-
-    <div class="admin-section">
-      <h2 data-i18n="add_solo_broker">Ajouter un courtier solo</h2>
-      <form class="admin-form" id="addBrokerForm" autocomplete="off">
-        <div class="field">
-          <label for="brEmail" data-i18n="email_label">Courriel</label>
-          <input type="email" id="brEmail" placeholder="courtier@example.com" data-i18n="broker_email_placeholder" data-i18n-target="placeholder" required>
-        </div>
-        <div class="field">
-          <label for="brName" data-i18n="name_label">Nom</label>
-          <input type="text" id="brName" placeholder="Prénom Nom" data-i18n="broker_name_placeholder" data-i18n-target="placeholder" required>
-        </div>
-        <button type="submit" id="addBrokerBtn" data-i18n="add_btn">Ajouter</button>
-      </form>
-      <div class="form-error hidden" id="brokerFormError"></div>
     </div>
     </div>
   </div>

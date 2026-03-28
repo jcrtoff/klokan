@@ -517,5 +517,12 @@
   <!-- ── Klokan chat widget ──────────────────────────────────────────────── -->
   <script src="/embed.js" data-broker="bad1fb59-bf1f-407f-a38c-e1fb71f01a34"></script>
 
+  <div id="versionTag" style="font-size:10px;text-align:center;padding:4px 0;opacity:0.5;color:#888;"></div>
+  <script>
+    fetch('/api/version').then(r => r.json()).then(d => {
+      document.getElementById('versionTag').textContent = d.sha;
+    }).catch(() => {});
+  </script>
+
 </body>
 </html>

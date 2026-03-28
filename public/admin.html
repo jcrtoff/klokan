@@ -297,6 +297,11 @@
         addBtn.disabled = false;
       }
     });
+
+    fetch('/api/version').then(r => r.json()).then(d => {
+      document.getElementById('versionTag').textContent = d.sha;
+    }).catch(() => {});
   </script>
+  <div class="version-tag" id="versionTag"></div>
 </body>
 </html>

@@ -163,6 +163,11 @@
         .then(broker => { if (broker) window.location.href = broker.role === 'admin' ? '/admin' : '/broker'; })
         .catch(() => {});
     }
+
+    fetch('/api/version').then(r => r.json()).then(d => {
+      document.getElementById('versionTag').textContent = d.sha;
+    }).catch(() => {});
   </script>
+  <div class="version-tag" id="versionTag"></div>
 </body>
 </html>

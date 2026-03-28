@@ -69,6 +69,7 @@
       settings:             'Paramètres',
       settings_lang:        'Langue',
       menu_limits:          'Limites',
+      menu_share:           'Partager & Intégrer',
       // broker.html – abuse limits
       limits_title:         'Limites de la conversation',
       limits_rate:          'Débit',
@@ -163,6 +164,7 @@
       settings:             'Settings',
       settings_lang:        'Language',
       menu_limits:          'Limits',
+      menu_share:           'Share & Embed',
       // broker.html – abuse limits
       limits_title:         'Conversation limits',
       limits_rate:          'Rate',

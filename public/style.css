@@ -387,6 +387,19 @@ body {
   padding: 4px 14px;
 }
 
+.burger-embed-btn {
+  display: block;
+  width: 100%;
+  padding: 6px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.burger-embed-btn:hover { background: var(--bg); }
+
 .burger-logout {
   display: block;
   width: 100%;

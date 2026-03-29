@@ -1,0 +1,27 @@
+-- CreateTable
+CREATE TABLE "site_content" (
+    "key" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "site_content_pkey" PRIMARY KEY ("key")
+);
+
+-- Seed consent banner (French)
+INSERT INTO "site_content" ("key", "value") VALUES
+('consent_main_text_fr', E'En utilisant ce chat, vous consentez à ce que votre courtier, via Klokan, collecte vos renseignements personnels (nom, courriel, téléphone, préférences immobilières) aux fins de vous contacter au sujet de votre projet immobilier. Vos données peuvent être traitées par des serveurs situés hors Québec.'),
+('consent_withdrawal_fr', E'Vous pouvez retirer votre consentement à tout moment en nous contactant.'),
+('consent_accept_btn_fr', E'J''accepte et je commence'),
+('consent_decline_btn_fr', E'Non merci'),
+
+-- Seed consent banner (English)
+('consent_main_text_en', E'By using this chat, you consent to your broker, via Klokan, collecting your personal information (name, email, phone, real estate preferences) in order to contact you about your real estate project. Your data may be processed by servers located outside Quebec.'),
+('consent_withdrawal_en', E'You may withdraw your consent at any time by contacting us.'),
+('consent_accept_btn_en', E'I accept and start'),
+('consent_decline_btn_en', E'No thanks'),
+
+-- Seed privacy policy body (French)
+('privacy_body_fr', E'<div class="policy-header">\n  <a href="/" class="policy-brand">Klokan</a>\n  <h1>Politique de confidentialité</h1>\n  <div class="policy-updated">Dernière mise à jour : mars 2026</div>\n</div>\n\n<div class="policy-officer">\n  <h2>Responsable de la protection des renseignements personnels</h2>\n  <p>\n    Jean-Christophe Roux<br>\n    Toff Systems Inc. / Klokan<br>\n    <a href="mailto:confidentialite@klokan.live">confidentialite@klokan.live</a>\n  </p>\n</div>\n\n<div class="policy-section">\n  <h2>Données collectées</h2>\n  <p>Dans le cadre de l''utilisation du chat Klokan, les renseignements personnels suivants peuvent être collectés :</p>\n  <ul>\n    <li>Nom</li>\n    <li>Adresse courriel</li>\n    <li>Numéro de téléphone</li>\n    <li>Budget immobilier</li>\n    <li>Type de propriété recherchée</li>\n    <li>Localisation / secteur souhaité</li>\n    <li>Échéancier du projet</li>\n    <li>Transcriptions des conversations</li>\n  </ul>\n</div>\n\n<div class="policy-section">\n  <h2>Finalité de la collecte</h2>\n  <p>\n    Les renseignements personnels sont collectés afin de qualifier les prospects immobiliers\n    et de les mettre en relation avec un courtier immobilier. Le traitement automatisé par\n    intelligence artificielle permet d''extraire les préférences immobilières afin de mieux\n    répondre à vos besoins.\n  </p>\n</div>\n\n<div class="policy-section">\n  <h2>Partage des données</h2>\n  <p>Vos renseignements personnels peuvent être partagés avec les tiers suivants :</p>\n  <ul>\n    <li><strong>Courtier immobilier assigné</strong> — le courtier auquel votre conversation est attribuée</li>\n    <li><strong>Anthropic</strong> — fournisseur d''intelligence artificielle, pour le traitement des conversations</li>\n    <li><strong>Fournisseur d''hébergement</strong> — pour le stockage sécurisé des données</li>\n  </ul>\n</div>\n\n<div class="policy-section">\n  <h2>Transmission hors Québec</h2>\n  <p>\n    Oui — les API d''Anthropic sont situées aux États-Unis. Vos données de conversation\n    sont transmises à ces serveurs pour le traitement par intelligence artificielle.\n    Une évaluation des facteurs relatifs à la vie privée (EFVP) a été réalisée conformément\n    aux exigences de la Loi 25.\n  </p>\n</div>\n\n<div class="policy-section">\n  <h2>Conservation des données</h2>\n  <p>\n    Les renseignements personnels sont conservés pour une durée maximale de 24 mois\n    après la dernière interaction. À l''expiration de ce délai, les données sont anonymisées\n    ou supprimées. Les données anonymisées (budget, type de propriété) peuvent être conservées\n    à des fins statistiques uniquement.\n  </p>\n</div>\n\n<div class="policy-section">\n  <h2>Droits des personnes concernées</h2>\n  <p>Conformément à la Loi 25, vous disposez des droits suivants :</p>\n  <ul>\n    <li><strong>Accès</strong> — obtenir une copie de vos renseignements personnels</li>\n    <li><strong>Rectification</strong> — corriger des renseignements inexacts ou incomplets</li>\n    <li><strong>Suppression</strong> — demander l''effacement de vos renseignements personnels</li>\n    <li><strong>Retrait du consentement</strong> — retirer votre consentement à tout moment</li>\n    <li><strong>Portabilité</strong> — recevoir vos données dans un format structuré et couramment utilisé</li>\n  </ul>\n  <p>\n    Pour exercer vos droits, contactez-nous à\n    <a href="mailto:confidentialite@klokan.live" style="color: var(--cta-600);">confidentialite@klokan.live</a>.\n  </p>\n</div>\n\n<div class="policy-section">\n  <h2>Incidents de confidentialité</h2>\n  <p>\n    Tout incident de confidentialité présentant un risque sérieux de préjudice est signalé\n    à la Commission d''accès à l''information (CAI) ainsi qu''aux personnes concernées,\n    conformément aux obligations de la Loi 25. Un registre des incidents est tenu en tout temps.\n  </p>\n</div>\n\n<div class="policy-footer">\n  Toff Systems Inc. / Klokan — Politique de confidentialité\n</div>'),
+
+-- Seed privacy policy body (English - empty, will fall back to French)
+('privacy_body_en', '');

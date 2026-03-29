@@ -118,6 +118,40 @@
     .admin-form button:hover { background: var(--cta-800); }
     .admin-form button:disabled { opacity: 0.5; cursor: not-allowed; }
     .form-error { font-size: 13px; color: var(--red-text); margin-top: 8px; }
+    .legal-section { margin-bottom: 32px; }
+    .legal-section h2 {
+      font-size: 14px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 12px;
+    }
+    .legal-form {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 16px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .legal-form .field { display: flex; flex-direction: column; gap: 4px; }
+    .legal-form label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .legal-form textarea, .legal-form input {
+      padding: 9px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius-md); font-size: 14px;
+      background: var(--bg); font-family: 'DM Sans', sans-serif;
+    }
+    .legal-form textarea { resize: vertical; }
+    .legal-form textarea.mono { font-family: monospace; font-size: 13px; }
+    .legal-form textarea:focus, .legal-form input:focus { border-color: var(--cta-600); outline: none; }
+    .legal-actions { display: flex; align-items: center; gap: 12px; }
+    .legal-actions button {
+      padding: 9px 18px; background: var(--cta-600); color: #fff; border: none;
+      border-radius: var(--radius-md); font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .legal-actions button:hover { background: var(--cta-800); }
+    .legal-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .legal-saved { font-size: 13px; color: var(--teal-800); }
+    .legal-lang-toggle { display: flex; gap: 4px; margin-bottom: 16px; }
+    .legal-lang-btn {
+      padding: 4px 12px; border: 1px solid var(--border); border-radius: var(--radius-md);
+      background: var(--bg); font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .legal-lang-btn.active { background: var(--cta-600); color: #fff; border-color: var(--cta-600); }
     .badge-authorized {
       display: inline-block;
       padding: 2px 8px;
@@ -173,6 +207,7 @@
       <button class="admin-tab active" data-tab="managers" data-i18n="managers">Gestionnaires</button>
       <button class="admin-tab" data-tab="brokers" data-i18n="solo_brokers">Courtiers solo</button>
       <button class="admin-tab" data-tab="admins" data-i18n="admins_tab">Admins</button>
+      <button class="admin-tab" data-tab="legal" data-i18n="legal_texts_tab">Textes légaux</button>
     </div>
 
     <div id="managersPanel">
@@ -262,6 +297,56 @@
       </table>
     </div>
     </div>
+
+    <div id="legalPanel" class="hidden">
+      <div class="legal-lang-toggle">
+        <button class="legal-lang-btn active" data-lang="fr" id="legalLangFr">FR</button>
+        <button class="legal-lang-btn" data-lang="en" id="legalLangEn">EN</button>
+      </div>
+
+      <div class="legal-section">
+        <h2 data-i18n="consent_banner_section">Bannière de consentement</h2>
+        <div class="legal-form" id="consentForm">
+          <div class="field">
+            <label data-i18n="consent_main_text_label">Texte principal</label>
+            <textarea id="legalConsentText" rows="5"></textarea>
+          </div>
+          <div class="field">
+            <label data-i18n="consent_withdrawal_label">Avis de retrait</label>
+            <textarea id="legalConsentWithdrawal" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label data-i18n="consent_accept_btn_label">Bouton accepter</label>
+            <input type="text" id="legalConsentAccept">
+          </div>
+          <div class="field">
+            <label data-i18n="consent_decline_btn_label">Bouton refuser</label>
+            <input type="text" id="legalConsentDecline">
+          </div>
+          <div class="legal-actions">
+            <button id="saveConsentBtn" data-i18n="save_btn">Enregistrer</button>
+            <span class="legal-saved hidden" id="consentSaved" data-i18n="saved_msg">Enregistré !</span>
+          </div>
+          <div class="form-error hidden" id="consentFormError"></div>
+        </div>
+      </div>
+
+      <div class="legal-section">
+        <h2 data-i18n="privacy_policy_section">Politique de confidentialité</h2>
+        <div class="legal-form" id="privacyForm">
+          <div class="field">
+            <label data-i18n="privacy_body_label">Contenu de la page (HTML)</label>
+            <textarea id="legalPrivacyBody" rows="20" class="mono"></textarea>
+          </div>
+          <div class="legal-actions">
+            <button id="savePrivacyBtn" data-i18n="save_btn">Enregistrer</button>
+            <a href="/confidentialite" target="_blank" style="font-size:13px;color:var(--cta-600);" data-i18n="preview_btn">Aperçu</a>
+            <span class="legal-saved hidden" id="privacySaved" data-i18n="saved_msg">Enregistré !</span>
+          </div>
+          <div class="form-error hidden" id="privacyFormError"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -284,6 +369,8 @@
         document.getElementById('managersPanel').classList.toggle('hidden', which !== 'managers');
         document.getElementById('brokersPanel').classList.toggle('hidden', which !== 'brokers');
         document.getElementById('adminsPanel').classList.toggle('hidden', which !== 'admins');
+        document.getElementById('legalPanel').classList.toggle('hidden', which !== 'legal');
+        if (which === 'legal') loadLegalTexts();
       });
     });
 
@@ -521,6 +608,85 @@
       } finally {
         addBtn.disabled = false;
       }
+    });
+
+    // ── Legal texts panel ───────────────────────────────────────────────
+    let legalLang = 'fr';
+
+    document.getElementById('legalLangFr').addEventListener('click', () => { legalLang = 'fr'; updateLegalLangUI(); loadLegalTexts(); });
+    document.getElementById('legalLangEn').addEventListener('click', () => { legalLang = 'en'; updateLegalLangUI(); loadLegalTexts(); });
+
+    function updateLegalLangUI() {
+      document.getElementById('legalLangFr').classList.toggle('active', legalLang === 'fr');
+      document.getElementById('legalLangEn').classList.toggle('active', legalLang === 'en');
+    }
+
+    async function loadLegalTexts() {
+      try {
+        const [consentResp, privacyResp] = await Promise.all([
+          fetch(`/api/site-content/consent?lang=${legalLang}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`/api/site-content/privacy?lang=${legalLang}`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+        const consent = await consentResp.json();
+        const privacy = await privacyResp.json();
+        document.getElementById('legalConsentText').value = consent.consent_main_text || '';
+        document.getElementById('legalConsentWithdrawal').value = consent.consent_withdrawal || '';
+        document.getElementById('legalConsentAccept').value = consent.consent_accept_btn || '';
+        document.getElementById('legalConsentDecline').value = consent.consent_decline_btn || '';
+        document.getElementById('legalPrivacyBody').value = privacy.privacy_body || '';
+      } catch {
+        console.error('Failed to load legal texts');
+      }
+    }
+
+    async function saveSiteContent(key, value, errorEl, savedEl) {
+      errorEl.classList.add('hidden');
+      savedEl.classList.add('hidden');
+      try {
+        const resp = await fetch('/api/admin/site-content', {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, value })
+        });
+        if (!resp.ok) {
+          const data = await resp.json();
+          throw new Error(data.error || 'internal_error');
+        }
+        return true;
+      } catch (err) {
+        errorEl.textContent = i18n.t(err.message) || i18n.t('internal_error');
+        errorEl.classList.remove('hidden');
+        return false;
+      }
+    }
+
+    document.getElementById('saveConsentBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveConsentBtn');
+      const errorEl = document.getElementById('consentFormError');
+      const savedEl = document.getElementById('consentSaved');
+      btn.disabled = true;
+      const pairs = [
+        [`consent_main_text_${legalLang}`, document.getElementById('legalConsentText').value],
+        [`consent_withdrawal_${legalLang}`, document.getElementById('legalConsentWithdrawal').value],
+        [`consent_accept_btn_${legalLang}`, document.getElementById('legalConsentAccept').value],
+        [`consent_decline_btn_${legalLang}`, document.getElementById('legalConsentDecline').value],
+      ];
+      let ok = true;
+      for (const [key, value] of pairs) {
+        if (!await saveSiteContent(key, value, errorEl, savedEl)) { ok = false; break; }
+      }
+      if (ok) { savedEl.classList.remove('hidden'); setTimeout(() => savedEl.classList.add('hidden'), 3000); }
+      btn.disabled = false;
+    });
+
+    document.getElementById('savePrivacyBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('savePrivacyBtn');
+      const errorEl = document.getElementById('privacyFormError');
+      const savedEl = document.getElementById('privacySaved');
+      btn.disabled = true;
+      const ok = await saveSiteContent(`privacy_body_${legalLang}`, document.getElementById('legalPrivacyBody').value, errorEl, savedEl);
+      if (ok) { savedEl.classList.remove('hidden'); setTimeout(() => savedEl.classList.add('hidden'), 3000); }
+      btn.disabled = false;
     });
 
     fetch('/api/version').then(r => r.json()).then(d => {

@@ -118,3 +118,11 @@ model DeletionLog {
 
   @@map("deletion_logs")
 }
+
+model SiteContent {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("site_content")
+}

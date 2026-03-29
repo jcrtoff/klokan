@@ -13,14 +13,14 @@
     <div class="consent-overlay" id="consentOverlay">
       <div class="consent-content">
         <div class="consent-logo">Klokan</div>
-        <p class="consent-text">
+        <p class="consent-text" id="consentText">
           En utilisant ce chat, vous consentez à ce que votre courtier,
           via Klokan, collecte vos renseignements personnels (nom, courriel,
           téléphone, préférences immobilières) aux fins de vous contacter
           au sujet de votre projet immobilier.
           Vos données peuvent être traitées par des serveurs situés hors Québec.
         </p>
-        <p class="consent-withdrawal">
+        <p class="consent-withdrawal" id="consentWithdrawal">
           Vous pouvez retirer votre consentement à tout moment en nous contactant.
         </p>
         <button class="consent-accept-btn" id="consentAcceptBtn">J'accepte et je commence</button>
@@ -111,9 +111,22 @@
       window.parent.postMessage({ type: 'klokan-close' }, '*');
     });
 
+    async function loadConsentTexts() {
+      try {
+        const resp = await fetch(`/api/site-content/consent?lang=${i18n.getLang()}`);
+        const data = await resp.json();
+        if (data.consent_main_text) document.getElementById('consentText').textContent = data.consent_main_text;
+        if (data.consent_withdrawal) document.getElementById('consentWithdrawal').textContent = data.consent_withdrawal;
+        if (data.consent_accept_btn) consentAcceptBtn.textContent = data.consent_accept_btn;
+        if (data.consent_decline_btn) consentDeclineBtn.textContent = data.consent_decline_btn;
+      } catch { /* keep hardcoded fallback */ }
+    }
+    loadConsentTexts();
+
     function switchLang(lang) {
       i18n.setLang(lang);
       updateSubtitle(currentBrokerName);
+      loadConsentTexts();
     }
 
     function updateSubtitle(brokerName) {

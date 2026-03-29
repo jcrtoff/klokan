@@ -618,15 +618,6 @@ body {
   flex-shrink: 0;
 }
 
-.session-item-broker {
-  font-size: 12px;
-  color: var(--text-secondary);
-  padding-left: 16px;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 .session-item-bottom {
   display: flex;

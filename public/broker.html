@@ -776,6 +776,8 @@
             badge = `<span class="session-unassigned-badge">${i18n.t('unassigned_badge')}</span>`;
           } else if (currentBroker?.role === 'manager' && s.assignedBrokerId === currentBroker.id) {
             badge = `<span class="session-unassigned-badge">${i18n.t('to_assign_badge')}</span>`;
+          } else if (s.assignedBrokerName) {
+            badge = `<span class="session-broker-badge">${escapeHtml(s.assignedBrokerName)}</span>`;
           }
 
           // Profile details line
@@ -804,11 +806,6 @@
             lastMsgHtml = '<div class="session-item-preview">(' + s.messageCount + ' msg)</div>';
           }
 
-          // Assigned broker line
-          const brokerLine = s.assignedBrokerName
-            ? '<div class="session-item-broker"><span class="session-item-label">' + i18n.t('assigned_broker_label') + '</span> ' + escapeHtml(s.assignedBrokerName) + '</div>'
-            : '';
-
           item.innerHTML =
             '<div class="session-item-top">' +
               '<span class="session-score-dot ' + scoreClass + '"></span>' +
@@ -817,8 +814,7 @@
             '</div>' +
             detailsHtml +
             contactHtml +
-            lastMsgHtml +
-            brokerLine;
+            lastMsgHtml;
 
           item.addEventListener('click', (e) => {
             if (e.target.closest('.session-action-btn')) return;

@@ -530,6 +530,9 @@ body {
   border-left-color: var(--cta-600);
 }
 
+.session-item.chaud { border-left-color: #C4694F; }
+.session-item.tiede { border-left-color: #D4A843; }
+
 .session-item.dim {
   opacity: 0.7;
 }
@@ -1202,6 +1205,22 @@ body {
   background: var(--cta-bg);
   padding: 1px 6px;
   border-radius: 4px;
+}
+
+.session-assign-btn {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cta-800);
+  background: var(--cta-bg);
+  padding: 1px 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.session-assign-btn:hover {
+  background: var(--cta-600);
+  color: #fff;
 }
 
 /* ── Claim button ────────────────────────────────────────────── */

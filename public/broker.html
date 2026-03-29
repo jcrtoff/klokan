@@ -766,17 +766,20 @@
 
           const name = s.leadName || ('Prospect #' + s.id.substring(0, 6));
           const score = s.leadScore ? s.leadScore.toLowerCase() : 'froid';
-          const isColdEmpty = score === 'froid' && s.messageCount === 0;
-          item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '') + (isColdEmpty ? ' dim' : '');
           const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : score;
+          const isEmpty = s.messageCount === 0;
+          item.className = 'session-item ' + scoreClass + (s.id === activeSessionId ? ' active' : '') + (isEmpty ? ' dim' : '');
 
           let badge = '';
+          const isManager = currentBroker?.role === 'manager';
           if (s.controlledByBrokerId) {
             badge = `<span class="session-broker-badge">${i18n.t('broker_badge')}</span>`;
           } else if (!s.assignedBrokerId) {
-            badge = `<span class="session-unassigned-badge">${i18n.t('unassigned_badge')}</span>`;
-          } else if (currentBroker?.role === 'manager' && s.assignedBrokerId === currentBroker.id) {
-            badge = `<span class="session-unassigned-badge">${i18n.t('to_assign_badge')}</span>`;
+            badge = isManager
+              ? `<button class="session-assign-btn">${i18n.t('to_assign_badge')} →</button>`
+              : `<span class="session-unassigned-badge">${i18n.t('unassigned_badge')}</span>`;
+          } else if (isManager && s.assignedBrokerId === currentBroker.id) {
+            badge = `<button class="session-assign-btn">${i18n.t('to_assign_badge')} →</button>`;
           } else if (s.assignedBrokerName) {
             badge = `<span class="session-broker-badge">${escapeHtml(s.assignedBrokerName)}</span>`;
           }
@@ -819,6 +822,11 @@
 
           item.addEventListener('click', (e) => {
             if (e.target.closest('.session-action-btn')) return;
+            if (e.target.closest('.session-assign-btn')) {
+              selectSession(s.id, s);
+              brokerSelect.focus();
+              return;
+            }
             selectSession(s.id, s);
           });
           sessionListEl.appendChild(item);

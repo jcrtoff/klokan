@@ -93,6 +93,8 @@
       account_save:         'Enregistrer',
       account_saved:        'Enregistré !',
       // broker.html – embed modal
+      open_chat:            'Ouvrir le chat',
+      open_chat_desc:       'Ouvrir la vue client dans un nouvel onglet',
       embed_link_label:     'Lien direct',
       embed_copy_link:      'Copier le lien',
       embed_snippet_label:  'Widget à intégrer (JS)',
@@ -207,6 +209,8 @@
       account_save:         'Save',
       account_saved:        'Saved!',
       // broker.html – embed modal
+      open_chat:            'Open chat',
+      open_chat_desc:       'Open the client view in a new tab',
       embed_link_label:     'Direct link',
       embed_copy_link:      'Copy link',
       embed_snippet_label:  'Embed widget (JS)',

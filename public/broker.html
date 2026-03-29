@@ -316,6 +316,10 @@
         </button>
       </div>
       <div class="embed-section">
+        <div class="embed-section-label" data-i18n="open_chat">Ouvrir le chat</div>
+        <a class="embed-copy-btn" id="openChatLink" target="_blank" rel="noopener" data-i18n="open_chat_desc" style="text-align:center;text-decoration:none;display:block;">Ouvrir la vue client dans un nouvel onglet</a>
+      </div>
+      <div class="embed-section">
         <div class="embed-section-label" data-i18n="embed_link_label">Lien direct</div>
         <div class="embed-code-block" id="embedLinkDisplay"></div>
         <button class="embed-copy-btn" id="copyLinkBtn" data-i18n="embed_copy_link">Copier le lien</button>
@@ -451,8 +455,9 @@
       const brokerId = currentBroker?.id;
       if (!brokerId) return;
       const origin = window.location.origin;
-      document.getElementById('embedLinkDisplay').textContent =
-        `${origin}/chat?broker=${brokerId}`;
+      const chatUrl = `${origin}/chat?broker=${brokerId}`;
+      document.getElementById('openChatLink').href = chatUrl;
+      document.getElementById('embedLinkDisplay').textContent = chatUrl;
       document.getElementById('embedSnippetDisplay').textContent =
         `<script src="${origin}/embed.js"\n  data-broker="${brokerId}">\n<\/script>`;
       embedModalOverlay.classList.remove('hidden');

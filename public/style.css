@@ -247,7 +247,8 @@ body {
 .broker-app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: calc(100dvh - 48px);
+  margin-top: 48px;
   overflow: hidden;
 }
 
@@ -260,6 +261,14 @@ body {
   flex-shrink: 0;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+}
+
+.app-top-bar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
 }
 
 .app-brand {

@@ -154,9 +154,8 @@
   </style>
 </head>
 <body>
-  <div class="broker-app">
-  <!-- Persistent top bar -->
-  <div class="app-top-bar">
+  <!-- Persistent top bar (full-width, outside broker-app) -->
+  <div class="app-top-bar app-top-bar-fixed">
     <span class="app-brand">Klokan</span>
     <div class="app-top-right">
       <span class="broker-email-display" id="brokerEmailDisplay"></span>
@@ -176,6 +175,7 @@
     </div>
   </div>
 
+  <div class="broker-app">
   <div class="broker-container">
     <!-- Left pane: session sidebar -->
     <div class="broker-sidebar" id="panel-sessions">

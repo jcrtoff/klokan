@@ -154,6 +154,7 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="managers" data-i18n="managers">Gestionnaires</button>
       <button class="admin-tab" data-tab="brokers" data-i18n="solo_brokers">Courtiers solo</button>
+      <button class="admin-tab" data-tab="admins" data-i18n="admins_tab">Admins</button>
     </div>
 
     <div id="managersPanel">
@@ -225,6 +226,24 @@
       </table>
     </div>
     </div>
+
+    <div id="adminsPanel" class="hidden">
+    <div class="admin-section">
+      <table class="admin-table" id="adminsTable">
+        <thead>
+          <tr>
+            <th data-i18n="name_label">Nom</th>
+            <th data-i18n="email_label">Courriel</th>
+            <th data-i18n="status">Statut</th>
+            <th data-i18n="last_login">Dernière connexion</th>
+          </tr>
+        </thead>
+        <tbody id="adminsBody">
+          <tr class="empty-row"><td colspan="4" data-i18n="loading">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
   </div>
 
   <script>
@@ -237,6 +256,7 @@
         const which = tab.dataset.tab;
         document.getElementById('managersPanel').classList.toggle('hidden', which !== 'managers');
         document.getElementById('brokersPanel').classList.toggle('hidden', which !== 'brokers');
+        document.getElementById('adminsPanel').classList.toggle('hidden', which !== 'admins');
       });
     });
 
@@ -276,6 +296,7 @@
       }
       loadManagers();
       loadBrokers();
+      loadAdmins();
     })();
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -383,6 +404,33 @@
       } catch {
         alert(i18n.t('revoke_error'));
       }
+    }
+
+    async function loadAdmins() {
+      try {
+        const resp = await fetch('/api/admin/admins', { headers: { 'Authorization': `Bearer ${token}` } });
+        const admins = await resp.json();
+        renderAdmins(admins);
+      } catch {
+        document.getElementById('adminsBody').innerHTML =
+          `<tr class="empty-row"><td colspan="4">${i18n.t('load_error')}</td></tr>`;
+      }
+    }
+
+    function renderAdmins(admins) {
+      const tbody = document.getElementById('adminsBody');
+      if (admins.length === 0) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="4">${i18n.t('no_admins')}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = admins.map(a => `
+        <tr>
+          <td>${escapeHtml(a.name)}</td>
+          <td class="muted">${escapeHtml(a.email)}</td>
+          <td>${a.authorized ? `<span class="badge-authorized">${i18n.t('active')}</span>` : `<span class="badge-revoked">${i18n.t('revoked')}</span>`}</td>
+          <td class="muted">${formatDate(a.lastLogin)}</td>
+        </tr>
+      `).join('');
     }
 
     document.getElementById('addBrokerForm').addEventListener('submit', async (e) => {

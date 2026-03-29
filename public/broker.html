@@ -794,9 +794,15 @@
           }
 
           // Last message preview with message count
-          const lastMsgHtml = s.lastMessage
-            ? '<div class="session-item-preview"><span class="session-item-label">' + i18n.t('last_message_label') + '</span> ' + escapeHtml(s.lastMessage) + ' (' + s.messageCount + ' msg)</div>'
-            : '<div class="session-item-preview">(' + s.messageCount + ' msg)</div>';
+          let lastMsgHtml;
+          if (s.lastMessage) {
+            const senderPrefix = s.lastMessageRole === 'assistant' ? 'Roxanne'
+              : s.lastMessageRole === 'broker' ? i18n.t('broker_badge')
+              : i18n.t('client_label');
+            lastMsgHtml = '<div class="session-item-preview"><span class="session-item-label">' + senderPrefix + ' :</span> ' + escapeHtml(s.lastMessage) + ' (' + s.messageCount + ' msg)</div>';
+          } else {
+            lastMsgHtml = '<div class="session-item-preview">(' + s.messageCount + ' msg)</div>';
+          }
 
           // Assigned broker line
           const brokerLine = s.assignedBrokerName

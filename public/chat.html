@@ -9,6 +9,29 @@
 </head>
 <body>
   <div class="chat-container">
+    <!-- Consent overlay -->
+    <div class="consent-overlay" id="consentOverlay">
+      <div class="consent-content">
+        <div class="consent-logo">Klokan</div>
+        <p class="consent-text">
+          En utilisant ce chat, vous consentez à ce que votre courtier,
+          via Klokan, collecte vos renseignements personnels (nom, courriel,
+          téléphone, préférences immobilières) aux fins de vous contacter
+          au sujet de votre projet immobilier.
+          Vos données peuvent être traitées par des serveurs situés hors Québec.
+        </p>
+        <p class="consent-withdrawal">
+          Vous pouvez retirer votre consentement à tout moment en nous contactant.
+        </p>
+        <button class="consent-accept-btn" id="consentAcceptBtn">J'accepte et je commence</button>
+        <div class="consent-links">
+          <a href="/confidentialite" target="_blank" class="consent-link">Politique de confidentialité</a>
+          <span class="consent-sep">·</span>
+          <button class="consent-decline-btn" id="consentDeclineBtn">Non merci</button>
+        </div>
+      </div>
+    </div>
+
     <div class="chat-header">
       <span class="online-dot"></span>
       <div>
@@ -46,6 +69,9 @@
     const typingIndicator = document.getElementById('typingIndicator');
     const brokerTyping = document.getElementById('brokerTyping');
     const subtitleEl = document.getElementById('subtitle');
+    const consentOverlay = document.getElementById('consentOverlay');
+    const consentAcceptBtn = document.getElementById('consentAcceptBtn');
+    const consentDeclineBtn = document.getElementById('consentDeclineBtn');
 
     let ws;
     let streamBubble = null;
@@ -53,8 +79,37 @@
     let connectAttempts = 0;
     const MAX_RETRY_ATTEMPTS = 5;
     let currentBrokerName = null;
+    let consentGiven = localStorage.getItem('klokan_consent_given') === 'true';
+    let consentRecorded = false;
 
     const connectionBanner = document.getElementById('connectionBanner');
+
+    // ── Consent handling ─────────────────────────────────────────────────
+    if (consentGiven) {
+      consentOverlay.classList.add('hidden');
+    }
+
+    consentAcceptBtn.addEventListener('click', async () => {
+      consentGiven = true;
+      localStorage.setItem('klokan_consent_given', 'true');
+      consentOverlay.classList.add('hidden');
+
+      // Record consent server-side once session is available
+      if (sessionId && !consentRecorded) {
+        consentRecorded = true;
+        const params = new URLSearchParams(location.search);
+        fetch('/api/consent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, widgetId: params.get('broker') })
+        }).catch(() => {});
+      }
+    });
+
+    consentDeclineBtn.addEventListener('click', () => {
+      // Tell parent embed to close the panel
+      window.parent.postMessage({ type: 'klokan-close' }, '*');
+    });
 
     function switchLang(lang) {
       i18n.setLang(lang);
@@ -107,6 +162,15 @@
             brokerTyping.textContent = currentBrokerName
               ? `${currentBrokerName} ${i18n.t('is_typing')}`
               : i18n.t('broker_typing');
+            // Record consent if already given before session was assigned
+            if (consentGiven && !consentRecorded) {
+              consentRecorded = true;
+              fetch('/api/consent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId, widgetId: targetBrokerId })
+              }).catch(() => {});
+            }
             break;
 
           case 'message':
@@ -172,7 +236,7 @@
 
     function send() {
       const text = msgInput.value.trim();
-      if (!text || ws.readyState !== WebSocket.OPEN) return;
+      if (!text || ws.readyState !== WebSocket.OPEN || !consentGiven) return;
 
       ws.send(JSON.stringify({ type: 'user_message', content: text }));
       addBubble('user', text);

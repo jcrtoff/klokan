@@ -54,6 +54,7 @@ body {
 
 /* ── Chat layout ─────────────────────────────────────────────── */
 .chat-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -1289,6 +1290,79 @@ body {
   opacity: 0.5;
   font-family: monospace;
 }
+
+/* ── Consent overlay ─────────────────────────────────────────── */
+.consent-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.consent-overlay.hidden { display: none; }
+.consent-content {
+  max-width: 340px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.consent-logo {
+  font-family: 'Fraunces', serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--teal-600);
+  letter-spacing: -0.03em;
+}
+.consent-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+.consent-withdrawal {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+.consent-accept-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--cta-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.consent-accept-btn:hover { background: var(--cta-800); }
+.consent-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.consent-link {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+.consent-link:hover { color: var(--text-primary); }
+.consent-sep { color: var(--text-secondary); }
+.consent-decline-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.consent-decline-btn:hover { color: var(--text-primary); }
 
 /* ── Sidebar tabs (manager) ───────────────────────────────────── */
 .sidebar-tabs {

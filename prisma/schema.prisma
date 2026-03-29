@@ -66,6 +66,7 @@ model Session {
   archivedAt           DateTime? @map("archived_at")
 
   messages Message[]
+  consents Consent[]
 
   @@map("sessions")
 }
@@ -82,4 +83,38 @@ model Message {
 
   @@index([sessionId])
   @@map("messages")
+}
+
+model Consent {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  widgetId  String?  @map("widget_id")
+  givenAt   DateTime @default(now()) @map("given_at")
+
+  @@map("consents")
+}
+
+model Incident {
+  id               String    @id @default(uuid())
+  occurredAt       DateTime  @map("occurred_at")
+  discoveredAt     DateTime  @map("discovered_at")
+  description      String
+  affectedSessions String[]  @map("affected_sessions")
+  riskLevel        String    @map("risk_level")
+  reportedToCAI    Boolean   @default(false) @map("reported_to_cai")
+  reportedAt       DateTime? @map("reported_at")
+  actionsTaken     String    @default("") @map("actions_taken")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@map("incidents")
+}
+
+model DeletionLog {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  deletedAt DateTime @default(now()) @map("deleted_at")
+  deletedBy String   @map("deleted_by")
+
+  @@map("deletion_logs")
 }

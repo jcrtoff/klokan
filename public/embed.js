@@ -51,6 +51,16 @@
     btn.innerHTML = open ? iconClose : iconChat;
   });
 
+  // Listen for close message from chat iframe (consent decline)
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'klokan-close') {
+      open = false;
+      iframe.classList.remove('open');
+      btn.setAttribute('aria-label', 'Ouvrir le chat');
+      btn.innerHTML = iconChat;
+    }
+  });
+
   document.body.appendChild(iframe);
   document.body.appendChild(bubble);
 })(document.currentScript);

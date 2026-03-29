@@ -98,6 +98,7 @@
       settings_lang:        'Langue',
       menu_limits:          'Limites',
       menu_share:           'Partager & Intégrer',
+      menu_admin:           'Administration',
       menu_account:         'Compte',
       account_name_label:   'Nom',
       account_email_label:  'Courriel',
@@ -210,6 +211,7 @@
       tab_chat:             'Chat',
       tab_lead:             'Profile',
       // broker.html – burger menu
+      menu_admin:           'Administration',
       settings:             'Settings',
       settings_lang:        'Language',
       menu_limits:          'Limits',

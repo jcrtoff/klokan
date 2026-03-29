@@ -168,6 +168,7 @@
           <button id="settingsBtn" class="burger-embed-btn" data-i18n="settings">Paramètres</button>
           <button id="embedBtn" class="burger-embed-btn" data-i18n="menu_share">Partager &amp; Intégrer</button>
           <button id="limitsBtn" class="burger-embed-btn" data-i18n="menu_limits">Limites</button>
+          <a href="/admin" id="adminLink" class="burger-embed-btn hidden" data-i18n="menu_admin" style="text-decoration:none;color:inherit;">Administration</a>
           <div class="burger-divider"></div>
           <button id="logoutBtn" class="burger-logout" data-i18n="logout">Déconnexion</button>
         </div>
@@ -481,6 +482,9 @@
         document.getElementById('brokerEmailDisplay').textContent = currentBroker.email;
         if (currentBroker.language && !localStorage.getItem('klokan_language')) {
           i18n.setLang(currentBroker.language);
+        }
+        if (currentBroker.role === 'admin') {
+          document.getElementById('adminLink').classList.remove('hidden');
         }
       } catch {
         localStorage.removeItem('klokan_token');

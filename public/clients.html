@@ -384,7 +384,7 @@
           : '—';
 
         tr.innerHTML =
-          '<td><strong>' + esc(c.leadName || i18n.t('new_client')) + '</strong></td>' +
+          '<td><strong>' + esc(c.leadName || ('Prospect #' + c.id.substring(0, 6))) + '</strong></td>' +
           '<td><div class="score-cell">' +
             (scoreClass ? '<span class="session-score-dot ' + scoreClass + '"></span>' : '') +
             '<span>' + esc(scoreLabel) + '</span>' +

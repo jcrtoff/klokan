@@ -762,11 +762,12 @@
         sessionListEl.innerHTML = '';
         for (const s of sessionsList) {
           const item = document.createElement('div');
-          item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '');
           item.dataset.sessionId = s.id;
 
-          const name = s.leadName || i18n.t('new_client');
+          const name = s.leadName || ('Prospect #' + s.id.substring(0, 6));
           const score = s.leadScore ? s.leadScore.toLowerCase() : 'froid';
+          const isColdEmpty = score === 'froid' && s.messageCount === 0;
+          item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '') + (isColdEmpty ? ' dim' : '');
           const scoreClass = (score === 'tiède' || score === 'tiede') ? 'tiede' : score;
 
           let badge = '';
@@ -878,7 +879,7 @@
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'select_session', sessionId }));
         }
-        showChat(sessionData?.leadName || i18n.t('new_client'));
+        showChat(sessionData?.leadName || ('Prospect #' + sessionId.substring(0, 6)));
         profileStrip.classList.remove('hidden');
       }
 
@@ -1213,7 +1214,7 @@
             ? new Date(c.lastActivity).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', { month: 'short', day: 'numeric', year: 'numeric' })
             : '—';
           tr.innerHTML =
-            '<td><strong>' + clEsc(c.leadName || i18n.t('new_client')) + '</strong></td>' +
+            '<td><strong>' + clEsc(c.leadName || ('Prospect #' + c.id.substring(0, 6))) + '</strong></td>' +
             '<td><div class="score-cell">' + (scoreClass ? '<span class="session-score-dot ' + scoreClass + '"></span>' : '') + '<span>' + clEsc(scoreLabel) + '</span></div></td>' +
             '<td class="muted">' + clEsc(c.budget || '—') + '</td>' +
             '<td class="muted">' + clEsc(c.neighbourhood || '—') + '</td>' +

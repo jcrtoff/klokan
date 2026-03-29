@@ -530,6 +530,10 @@ body {
   border-left-color: var(--cta-600);
 }
 
+.session-item.dim {
+  opacity: 0.7;
+}
+
 .session-item-top {
   display: flex;
   align-items: center;
@@ -1184,12 +1188,11 @@ body {
 /* ── Session badges ──────────────────────────────────────────── */
 .session-unassigned-badge {
   font-size: 10px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--bg);
+  font-weight: 700;
+  color: var(--cta-800);
+  background: var(--cta-bg);
   padding: 1px 6px;
   border-radius: 4px;
-  border: 1px solid var(--border);
 }
 
 .session-assigned-badge {

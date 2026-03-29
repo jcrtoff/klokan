@@ -1,6 +1,6 @@
 # Klokan
 
-Real-time AI real estate assistant demo. Roxanne (AI) qualifies leads for brokers. Multi-broker support with passwordless auth. Bilingual French/English.
+Real-time AI real estate assistant demo. AI assistant qualifies leads for brokers. Multi-broker support with passwordless auth. Bilingual French/English.
 
 ## Tech stack
 

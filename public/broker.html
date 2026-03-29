@@ -555,6 +555,17 @@
       if (e.target === limitsModalOverlay) limitsModalOverlay.classList.add('hidden');
     });
 
+    // ── Escape key closes all modals ──────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        embedModalOverlay.classList.add('hidden');
+        accountModalOverlay.classList.add('hidden');
+        settingsModalOverlay.classList.add('hidden');
+        limitsModalOverlay.classList.add('hidden');
+        burgerDropdown.classList.add('hidden');
+      }
+    });
+
     // ── App init (after auth) ─────────────────────────────────────────────
     function initApp() {
       const messagesEl = document.getElementById('messages');

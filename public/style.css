@@ -599,20 +599,19 @@ body {
   font-size: 11px;
   color: var(--cta-600);
   text-decoration: none;
-  padding: 2px 8px;
-  border-radius: var(--radius);
-  background: var(--cta-bg);
-  border: 1px solid var(--cta-600);
+  padding: 2px 0;
+  background: none;
+  border: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 200px;
-  transition: background 0.15s;
+  transition: color 0.15s;
 }
 
 .session-action-btn:hover {
-  background: var(--cta-600);
-  color: #fff;
+  color: var(--cta-800);
+  text-decoration: underline;
 }
 
 .session-action-btn svg {

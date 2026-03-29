@@ -1199,6 +1199,10 @@ body {
     margin: 48px auto 0;
     box-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,.08);
   }
+
+  .app-top-bar-fixed {
+    padding: 0 max(16px, calc((100% - 760px) / 2));
+  }
 }
 
 .link-btn {

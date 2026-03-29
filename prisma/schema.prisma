@@ -63,6 +63,7 @@ model Session {
   totalResponseTime    Int      @default(0) @map("total_response_time")
   createdAt            DateTime @default(now()) @map("created_at")
   lastActivity         DateTime @default(now()) @map("last_activity")
+  archivedAt           DateTime? @map("archived_at")
 
   messages Message[]
 

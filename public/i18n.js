@@ -141,6 +141,7 @@
       max_retry:            'Impossible de se connecter. Veuillez rafraîchir la page.',
       broker_typing:        "Le courtier est en train d'écrire…",
       is_typing:            "est en train d'écrire…",
+      archive_confirm:      'Archiver cette session ?',
     },
     en: {
       // shared
@@ -283,6 +284,7 @@
       max_retry:            'Could not connect. Please refresh the page.',
       broker_typing:        'The broker is typing…',
       is_typing:            'is typing…',
+      archive_confirm:      'Archive this session?',
     }
   };
 

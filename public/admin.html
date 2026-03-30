@@ -171,6 +171,37 @@
       color: var(--red-text);
     }
     .empty-row td { color: var(--text-secondary); font-style: italic; }
+    /* incidents */
+    .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .incident-form {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .incident-form .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+    .incident-form label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .incident-form input, .incident-form select, .incident-form textarea {
+      padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-md);
+      font-size: 14px; background: var(--bg); font-family: 'DM Sans', sans-serif;
+    }
+    .incident-form input:focus, .incident-form select:focus, .incident-form textarea:focus {
+      border-color: var(--cta-600); outline: none;
+    }
+    .incident-form textarea { resize: vertical; min-height: 60px; }
+    .form-actions { display: flex; justify-content: flex-end; }
+    .form-actions button {
+      padding: 9px 18px; background: var(--cta-600); color: #fff; border: none;
+      border-radius: var(--radius-md); font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .form-actions button:hover { background: var(--cta-800); }
+    .form-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .risk-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .risk-low { background: var(--teal-50); color: var(--teal-800); }
+    .risk-medium { background: #FFF3CD; color: #856404; }
+    .risk-high { background: var(--red-bg); color: var(--red-text); }
+    .desc-cell { max-width: 240px; white-space: pre-wrap; word-break: break-word; }
   </style>
 </head>
 <body>
@@ -183,7 +214,6 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
         <div class="burger-dropdown hidden" id="burgerDropdown">
-          <a href="/admin/incidents" class="burger-embed-btn" style="text-decoration:none;color:inherit;">Registre des incidents</a>
           <a href="/confidentialite" class="burger-embed-btn" target="_blank" style="text-decoration:none;color:inherit;">Politique de confidentialité</a>
           <div class="burger-divider"></div>
           <div style="padding: 6px 14px;">
@@ -210,6 +240,7 @@
       <button class="admin-tab" data-tab="brokers" data-i18n="solo_brokers">Courtiers solo</button>
       <button class="admin-tab" data-tab="admins" data-i18n="admins_tab">Admins</button>
       <button class="admin-tab" data-tab="legal" data-i18n="legal_texts_tab">Textes légaux</button>
+      <button class="admin-tab" data-tab="incidents" data-i18n="incidents_tab">Incidents</button>
     </div>
 
     <div id="managersPanel">
@@ -351,6 +382,75 @@
         </div>
       </div>
     </div>
+
+    <div id="incidentsPanel" class="hidden">
+      <div class="admin-section">
+        <h2 data-i18n="report_incident">Signaler un incident</h2>
+        <form class="incident-form" id="incidentForm" autocomplete="off">
+          <div class="form-row">
+            <div class="field">
+              <label for="occurredAt" data-i18n="occurred_at">Date de survenance</label>
+              <input type="datetime-local" id="occurredAt" required>
+            </div>
+            <div class="field">
+              <label for="discoveredAt" data-i18n="discovered_at">Date de découverte</label>
+              <input type="datetime-local" id="discoveredAt" required>
+            </div>
+            <div class="field">
+              <label for="riskLevel" data-i18n="risk_level">Niveau de risque</label>
+              <select id="riskLevel" required>
+                <option value="low" data-i18n="risk_low">Faible</option>
+                <option value="medium" data-i18n="risk_medium">Moyen</option>
+                <option value="high" data-i18n="risk_high">Élevé</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="incidentDescription" data-i18n="incident_description">Description</label>
+            <textarea id="incidentDescription" data-i18n="describe_incident" data-i18n-target="placeholder" placeholder="Décrivez l'incident..." required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="affectedSessions" data-i18n="affected_sessions">Sessions affectées (IDs, séparés par des virgules)</label>
+              <input type="text" id="affectedSessions" placeholder="uuid1, uuid2">
+            </div>
+            <div class="field">
+              <label for="reportedToCAI" data-i18n="reported_to_cai">Signalé à la CAI ?</label>
+              <select id="reportedToCAI">
+                <option value="false" data-i18n="no">Non</option>
+                <option value="true" data-i18n="yes">Oui</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="actionsTaken" data-i18n="actions_taken">Actions prises</label>
+            <textarea id="actionsTaken" data-i18n="corrective_actions" data-i18n-target="placeholder" placeholder="Mesures correctives..."></textarea>
+          </div>
+          <div class="form-error hidden" id="incidentFormError"></div>
+          <div class="form-actions">
+            <button type="submit" id="incidentSubmitBtn" data-i18n="save_incident">Enregistrer l'incident</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="admin-section">
+        <h2 data-i18n="incident_history">Historique des incidents</h2>
+        <table class="admin-table" id="incidentsTable">
+          <thead>
+            <tr>
+              <th data-i18n="col_date">Date</th>
+              <th data-i18n="col_risk">Risque</th>
+              <th data-i18n="col_description">Description</th>
+              <th data-i18n="col_cai">CAI</th>
+              <th data-i18n="col_actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="incidentsBody">
+            <tr class="empty-row"><td colspan="5" data-i18n="loading">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -374,7 +474,9 @@
         document.getElementById('brokersPanel').classList.toggle('hidden', which !== 'brokers');
         document.getElementById('adminsPanel').classList.toggle('hidden', which !== 'admins');
         document.getElementById('legalPanel').classList.toggle('hidden', which !== 'legal');
+        document.getElementById('incidentsPanel').classList.toggle('hidden', which !== 'incidents');
         if (which === 'legal') loadLegalTexts();
+        if (which === 'incidents') loadIncidents();
       });
     });
 
@@ -752,6 +854,93 @@
 
     document.getElementById('translateConsentBtn').addEventListener('click', () => translateFromOtherLang('consent'));
     document.getElementById('translatePrivacyBtn').addEventListener('click', () => translateFromOtherLang('privacy'));
+
+    // ── Incidents panel ────────────────────────────────────────────────
+
+    function formatDateTime(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('fr-CA', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function riskBadge(level) {
+      const labels = { low: i18n.t('risk_low'), medium: i18n.t('risk_medium'), high: i18n.t('risk_high') };
+      return `<span class="risk-badge risk-${level}">${labels[level] || level}</span>`;
+    }
+
+    async function loadIncidents() {
+      try {
+        const resp = await fetch('/api/admin/incidents', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const incidents = await resp.json();
+        renderIncidents(incidents);
+      } catch {
+        document.getElementById('incidentsBody').innerHTML =
+          `<tr class="empty-row"><td colspan="5">${i18n.t('incident_load_error')}</td></tr>`;
+      }
+    }
+
+    function renderIncidents(incidents) {
+      const tbody = document.getElementById('incidentsBody');
+      if (incidents.length === 0) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${i18n.t('no_incidents')}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = incidents.map(inc => `
+        <tr>
+          <td class="muted">${formatDateTime(inc.occurredAt)}</td>
+          <td>${riskBadge(inc.riskLevel)}</td>
+          <td class="desc-cell">${escapeHtml(inc.description)}</td>
+          <td>${inc.reportedToCAI ? i18n.t('yes') : i18n.t('no')}</td>
+          <td class="muted desc-cell">${escapeHtml(inc.actionsTaken) || '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('incidentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('incidentFormError');
+      errorEl.classList.add('hidden');
+      const submitBtn = document.getElementById('incidentSubmitBtn');
+      submitBtn.disabled = true;
+
+      const affectedRaw = document.getElementById('affectedSessions').value.trim();
+      const affectedSessions = affectedRaw ? affectedRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+      const body = {
+        occurredAt: document.getElementById('occurredAt').value,
+        discoveredAt: document.getElementById('discoveredAt').value,
+        riskLevel: document.getElementById('riskLevel').value,
+        description: document.getElementById('incidentDescription').value.trim(),
+        affectedSessions,
+        reportedToCAI: document.getElementById('reportedToCAI').value === 'true',
+        actionsTaken: document.getElementById('actionsTaken').value.trim()
+      };
+
+      try {
+        const resp = await fetch('/api/admin/incidents', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!resp.ok) {
+          const data = await resp.json();
+          errorEl.textContent = data.error || i18n.t('incident_create_error');
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        document.getElementById('incidentForm').reset();
+        loadIncidents();
+      } catch {
+        errorEl.textContent = i18n.t('incident_network_error');
+        errorEl.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
 
     fetch('/api/version').then(r => r.json()).then(d => {
       document.getElementById('versionTag').textContent = d.sha;

@@ -145,6 +145,8 @@
     }
     .legal-actions button:hover { background: var(--cta-800); }
     .legal-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .legal-actions button.btn-secondary { background: var(--bg); color: var(--text-primary); border: 1px solid var(--border); }
+    .legal-actions button.btn-secondary:hover { background: var(--teal-50); }
     .legal-saved { font-size: 13px; color: var(--teal-800); }
     .legal-lang-toggle { display: flex; gap: 4px; margin-bottom: 16px; }
     .legal-lang-btn {
@@ -325,6 +327,7 @@
           </div>
           <div class="legal-actions">
             <button id="saveConsentBtn" data-i18n="save_btn">Enregistrer</button>
+            <button id="translateConsentBtn" class="btn-secondary" data-i18n="translate_from_fr">Traduire du FR</button>
             <span class="legal-saved hidden" id="consentSaved" data-i18n="saved_msg">Enregistré !</span>
           </div>
           <div class="form-error hidden" id="consentFormError"></div>
@@ -340,6 +343,7 @@
           </div>
           <div class="legal-actions">
             <button id="savePrivacyBtn" data-i18n="save_btn">Enregistrer</button>
+            <button id="translatePrivacyBtn" class="btn-secondary" data-i18n="translate_from_fr">Traduire du FR</button>
             <a href="/confidentialite" target="_blank" style="font-size:13px;color:var(--cta-600);" data-i18n="preview_btn">Aperçu</a>
             <span class="legal-saved hidden" id="privacySaved" data-i18n="saved_msg">Enregistré !</span>
           </div>
@@ -619,6 +623,9 @@
     function updateLegalLangUI() {
       document.getElementById('legalLangFr').classList.toggle('active', legalLang === 'fr');
       document.getElementById('legalLangEn').classList.toggle('active', legalLang === 'en');
+      const translateKey = legalLang === 'en' ? 'translate_from_fr' : 'translate_from_en';
+      document.getElementById('translateConsentBtn').textContent = i18n.t(translateKey);
+      document.getElementById('translatePrivacyBtn').textContent = i18n.t(translateKey);
     }
 
     async function loadLegalTexts() {
@@ -688,6 +695,63 @@
       if (ok) { savedEl.classList.remove('hidden'); setTimeout(() => savedEl.classList.add('hidden'), 3000); }
       btn.disabled = false;
     });
+
+    // ── Translate buttons ──────────────────────────────────────────────
+
+    async function translateFromOtherLang(section) {
+      const sourceLang = legalLang === 'en' ? 'fr' : 'en';
+      const isConsent = section === 'consent';
+      const btn = document.getElementById(isConsent ? 'translateConsentBtn' : 'translatePrivacyBtn');
+      const errorEl = document.getElementById(isConsent ? 'consentFormError' : 'privacyFormError');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = i18n.t('translating');
+      errorEl.classList.add('hidden');
+
+      try {
+        if (isConsent) {
+          const resp = await fetch(`/api/site-content/consent?lang=${sourceLang}&noFallback=1`, { headers: { 'Authorization': `Bearer ${token}` } });
+          const source = await resp.json();
+          const fields = ['consent_main_text', 'consent_withdrawal', 'consent_accept_btn', 'consent_decline_btn'];
+          const ids = ['legalConsentText', 'legalConsentWithdrawal', 'legalConsentAccept', 'legalConsentDecline'];
+          const hasContent = fields.some(k => source[k]?.trim());
+          if (!hasContent) { errorEl.textContent = i18n.t('translate_no_source'); errorEl.classList.remove('hidden'); return; }
+          for (let i = 0; i < fields.length; i++) {
+            const text = source[fields[i]]?.trim();
+            if (!text) { document.getElementById(ids[i]).value = ''; continue; }
+            const tResp = await fetch('/api/admin/translate', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text, targetLang: legalLang })
+            });
+            if (!tResp.ok) throw new Error('translate_error');
+            const { translation } = await tResp.json();
+            document.getElementById(ids[i]).value = translation;
+          }
+        } else {
+          const resp = await fetch(`/api/site-content/privacy?lang=${sourceLang}&noFallback=1`, { headers: { 'Authorization': `Bearer ${token}` } });
+          const source = await resp.json();
+          if (!source.privacy_body?.trim()) { errorEl.textContent = i18n.t('translate_no_source'); errorEl.classList.remove('hidden'); return; }
+          const tResp = await fetch('/api/admin/translate', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: source.privacy_body, targetLang: legalLang })
+          });
+          if (!tResp.ok) throw new Error('translate_error');
+          const { translation } = await tResp.json();
+          document.getElementById('legalPrivacyBody').value = translation;
+        }
+      } catch (err) {
+        errorEl.textContent = i18n.t('translate_error');
+        errorEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    document.getElementById('translateConsentBtn').addEventListener('click', () => translateFromOtherLang('consent'));
+    document.getElementById('translatePrivacyBtn').addEventListener('click', () => translateFromOtherLang('privacy'));
 
     fetch('/api/version').then(r => r.json()).then(d => {
       document.getElementById('versionTag').textContent = d.sha;

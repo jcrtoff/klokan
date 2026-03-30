@@ -624,8 +624,8 @@
     async function loadLegalTexts() {
       try {
         const [consentResp, privacyResp] = await Promise.all([
-          fetch(`/api/site-content/consent?lang=${legalLang}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`/api/site-content/privacy?lang=${legalLang}`, { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(`/api/site-content/consent?lang=${legalLang}&noFallback=1`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`/api/site-content/privacy?lang=${legalLang}&noFallback=1`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
         const consent = await consentResp.json();
         const privacy = await privacyResp.json();
